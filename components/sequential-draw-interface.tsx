@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight } from "lucide-react"
+import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX } from "lucide-react"
 
 interface PrizeCategory {
   id: string
@@ -57,15 +57,139 @@ export function SequentialDrawInterface({
   onMoveToNextCategory,
 }: SequentialDrawInterfaceProps) {
   const [spinningText, setSpinningText] = useState<string>("")
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+  
+  // Audio refs for different sound effects
+  const drawingSoundRef = useRef<HTMLAudioElement | null>(null)
+  const winnerSoundRef = useRef<HTMLAudioElement | null>(null)
+  const completeSoundRef = useRef<HTMLAudioElement | null>(null)
+  const buttonClickSoundRef = useRef<HTMLAudioElement | null>(null)
 
+  // Initialize audio objects
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Drawing sound - should be a looping slot machine/roulette sound
+      drawingSoundRef.current = new Audio('/sounds/kbc.mp3')
+      drawingSoundRef.current.loop = true
+      drawingSoundRef.current.volume = 0.6
+      
+      // Winner sound - celebration/victory sound
+      winnerSoundRef.current = new Audio('/public/sounds/winner-sound.mp3')
+      winnerSoundRef.current.volume = 0.8
+      
+      // Complete sound - event completion fanfare
+      completeSoundRef.current = new Audio('/sounds/complete-sound.mp3')
+      completeSoundRef.current.volume = 0.7
+      
+      // Button click sound - button press feedback
+      buttonClickSoundRef.current = new Audio('/sounds/button-click.mp3')
+      buttonClickSoundRef.current.volume = 0.4
+    }
+
+    // Cleanup function
+    return () => {
+      if (drawingSoundRef.current) {
+        drawingSoundRef.current.pause()
+        drawingSoundRef.current = null
+      }
+      if (winnerSoundRef.current) {
+        winnerSoundRef.current.pause()
+        winnerSoundRef.current = null
+      }
+      if (completeSoundRef.current) {
+        completeSoundRef.current.pause()
+        completeSoundRef.current = null
+      }
+      if (buttonClickSoundRef.current) {
+        buttonClickSoundRef.current.pause()
+        buttonClickSoundRef.current = null
+      }
+    }
+  }, [])
+
+  // Handle drawing animation and sound
   useEffect(() => {
     if (isDrawing) {
+      // Start spinning animation
       const interval = setInterval(() => {
         setSpinningText(Math.random().toString(36).substring(2, 10).toUpperCase())
       }, 100)
-      return () => clearInterval(interval)
+
+      // Start drawing sound
+      if (isSoundEnabled && drawingSoundRef.current) {
+        drawingSoundRef.current.currentTime = 0
+        drawingSoundRef.current.play().catch(console.error)
+      }
+
+      return () => {
+        clearInterval(interval)
+        // Stop drawing sound when animation stops
+        if (drawingSoundRef.current) {
+          drawingSoundRef.current.pause()
+          drawingSoundRef.current.currentTime = 0
+        }
+      }
+    } else {
+      // Stop drawing sound when isDrawing becomes false
+      if (drawingSoundRef.current) {
+        drawingSoundRef.current.pause()
+        drawingSoundRef.current.currentTime = 0
+      }
     }
-  }, [isDrawing])
+  }, [isDrawing, isSoundEnabled])
+
+  // Handle winner announcement sound
+  useEffect(() => {
+    if (currentWinner && !isDrawing && isSoundEnabled) {
+      // Play winner sound when winner is announced
+      if (winnerSoundRef.current) {
+        winnerSoundRef.current.currentTime = 0
+        winnerSoundRef.current.play().catch(console.error)
+      }
+    }
+  }, [currentWinner, isDrawing, isSoundEnabled])
+
+  // Handle event completion sound
+  useEffect(() => {
+    if (isEventComplete && isSoundEnabled) {
+      // Play completion sound when event is complete
+      if (completeSoundRef.current) {
+        completeSoundRef.current.currentTime = 0
+        completeSoundRef.current.play().catch(console.error)
+      }
+    }
+  }, [isEventComplete, isSoundEnabled])
+
+  // Play button click sound
+  const playButtonSound = () => {
+    if (isSoundEnabled && buttonClickSoundRef.current) {
+      buttonClickSoundRef.current.currentTime = 0
+      buttonClickSoundRef.current.play().catch(console.error)
+    }
+  }
+
+  // Enhanced draw function with sound
+  const handlePerformDraw = () => {
+    playButtonSound()
+    onPerformDraw()
+  }
+
+  // Enhanced next category function with sound
+  const handleMoveToNextCategory = () => {
+    playButtonSound()
+    onMoveToNextCategory()
+  }
+
+  // Enhanced reset function with sound
+  const handleResetSystem = () => {
+    playButtonSound()
+    // Stop all sounds
+    if (drawingSoundRef.current) {
+      drawingSoundRef.current.pause()
+      drawingSoundRef.current.currentTime = 0
+    }
+    onResetSystem()
+  }
 
   const getNextPrizeInfo = () => {
     if (!currentCategory) return null
@@ -87,6 +211,23 @@ export function SequentialDrawInterface({
 
   return (
     <div className="space-y-8 p-6">
+      {/* Sound Control Button */}
+      {/* <div className="flex justify-end">
+        <Button
+          onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+          variant="outline"
+          size="sm"
+          className="border-orange-500 text-white hover:bg-orange-500/20 bg-transparent"
+        >
+          {isSoundEnabled ? (
+            <Volume2 className="w-4 h-4 mr-2" />
+          ) : (
+            <VolumeX className="w-4 h-4 mr-2" />
+          )}
+          {isSoundEnabled ? 'Sound On' : 'Sound Off'}
+        </Button>
+      </div> */}
+
       {/* Main Draw Interface - Three Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left Column: Current Prize Information */}
@@ -119,8 +260,6 @@ export function SequentialDrawInterface({
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
                 <h2 className="text-xl font-bold text-white mb-2">{currentCategory.name.toUpperCase()}</h2>
-
-                {/* Only show drawing info, not completion status */}
               </CardContent>
             </Card>
           ) : isEventComplete ? (
@@ -215,7 +354,7 @@ export function SequentialDrawInterface({
                 </div>
               </div>
 
-              {/* Side Decorations - Better positioned */}
+              {/* Side Decorations */}
               <div className="absolute left-1 top-1/2 transform -translate-y-1/2 w-6 h-24 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-full shadow-lg"></div>
               <div className="absolute right-1 top-1/2 transform -translate-y-1/2 w-6 h-24 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-full shadow-lg"></div>
             </div>
@@ -227,7 +366,7 @@ export function SequentialDrawInterface({
               {/* Draw Button - Show when category is not complete */}
               {!isCategoryComplete && (
                 <Button
-                  onClick={onPerformDraw}
+                  onClick={handlePerformDraw}
                   disabled={!canDraw}
                   className="px-8 py-4 text-xl font-bold bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-yellow-400"
                 >
@@ -248,7 +387,7 @@ export function SequentialDrawInterface({
               {/* Next Category Button - Show when category is complete */}
               {isCategoryComplete && (
                 <Button
-                  onClick={onMoveToNextCategory}
+                  onClick={handleMoveToNextCategory}
                   className="px-8 py-4 text-xl font-bold bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-yellow-400"
                 >
                   <ChevronRight className="w-6 h-6 mr-3" />
@@ -354,7 +493,7 @@ export function SequentialDrawInterface({
       {/* Reset Button */}
       <div className="flex justify-center">
         <Button
-          onClick={onResetSystem}
+          onClick={handleResetSystem}
           variant="outline"
           className="border-orange-500 text-white hover:bg-orange-500/20 bg-transparent"
         >
