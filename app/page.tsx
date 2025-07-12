@@ -66,7 +66,7 @@ interface Winner {
 const corporatePrizes: PrizeCategory[] = [
   {
     id: "noise-earbuds",
-    name: "NOISE PURE BUDS (EARBUDS)",
+    name: "EARBUDS",
     icon: <Headphones className="w-6 h-6" />,
     winnerCount: 20,
     color: "bg-gradient-to-r from-blue-500 to-purple-600",
@@ -76,7 +76,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "mixer-grinder",
-    name: "MIXER GRINDER-FOOD PROCESSOR",
+    name: "FOOD PROCESSOR",
     icon: <Volume2 className="w-6 h-6" />,
     winnerCount: 7,
     color: "bg-gradient-to-r from-green-400 to-blue-500",
@@ -86,7 +86,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "samsung-a16",
-    name: "SMARTPHONE - SAMSUNG A16",
+    name: "SMARTPHONE",
     icon: <Smartphone className="w-6 h-6" />,
     winnerCount: 6,
     color: "bg-gradient-to-r from-purple-500 to-pink-500",
@@ -96,7 +96,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "double-door-fridge",
-    name: "DOUBLE DOOR FRIDGE",
+    name: "REFRIGERATOR",
     icon: <AirVent className="w-6 h-6" />,
     winnerCount: 5,
     color: "bg-gradient-to-r from-cyan-400 to-blue-500",
@@ -107,7 +107,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "smart-tv-43",
-    name: "43 INCH SMART TELEVISION",
+    name: "TELEVISION",
     icon: <Tv className="w-6 h-6" />,
     winnerCount: 4,
     color: "bg-gradient-to-r from-indigo-500 to-purple-600",
@@ -117,7 +117,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "split-ac-1-5",
-    name: "SPLIT AC 1.5 TON",
+    name: "SPLIT AC",
     icon: <Wind className="w-6 h-6" />,
     winnerCount: 3,
     color: "bg-gradient-to-r from-teal-400 to-green-500",
@@ -148,7 +148,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "tvs-icube",
-    name: "TVS I-CUBE SCOOTERS",
+    name: "(MEGA PRIZE) TVS I-CUBE",
     icon: <Car className="w-6 h-6" />,
     winnerCount: 3,
     color: "bg-gradient-to-r from-emerald-400 to-teal-500",
