@@ -107,7 +107,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "smart-tv-43",
-    name: "TELEVISION",
+    name: "43 INCH TELEVISION",
     icon: <Tv className="w-6 h-6" />,
     winnerCount: 4,
     color: "bg-gradient-to-r from-indigo-500 to-purple-600",
@@ -117,7 +117,7 @@ const corporatePrizes: PrizeCategory[] = [
   },
   {
     id: "split-ac-1-5",
-    name: "SPLIT AC",
+    name: "SPLIT AC 1.5 TON",
     icon: <Wind className="w-6 h-6" />,
     winnerCount: 3,
     color: "bg-gradient-to-r from-teal-400 to-green-500",
