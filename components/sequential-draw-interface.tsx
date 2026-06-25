@@ -2,10 +2,52 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX } from "lucide-react"
+
+/* -------------------- Celebration confetti -------------------- */
+const CONFETTI_COLORS = ["#fbbf24", "#f59e0b", "#fde68a", "#fff7cc", "#ea580c", "#fca5a5", "#facc15"]
+
+function Confetti() {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 70 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 0.5,
+        duration: 1.6 + Math.random() * 1.8,
+        size: 6 + Math.random() * 8,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        drift: (Math.random() * 2 - 1) * 90,
+        rot: Math.random() * 720 + 360,
+      })),
+    [],
+  )
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+      {pieces.map((p) => (
+        <span
+          key={p.id}
+          className="confetti-piece"
+          style={{
+            left: `${p.left}%`,
+            width: `${p.size}px`,
+            height: `${p.size * 0.55}px`,
+            background: p.color,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+            // custom props consumed by the confetti-fall keyframes
+            ["--drift" as any]: `${p.drift}px`,
+            ["--rot" as any]: `${p.rot}deg`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 
 interface PrizeCategory {
   id: string
@@ -56,7 +98,7 @@ export function SequentialDrawInterface({
   winners,
   onMoveToNextCategory,
 }: SequentialDrawInterfaceProps) {
-  const [spinningText, setSpinningText] = useState<string>("")
+  const [reelNames, setReelNames] = useState<string[]>([])
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   
   // Audio refs for different sound effects
@@ -110,10 +152,14 @@ export function SequentialDrawInterface({
   // Handle drawing animation and sound
   useEffect(() => {
     if (isDrawing) {
-      // Start spinning animation
-      const interval = setInterval(() => {
-        setSpinningText(Math.random().toString(36).substring(2, 10).toUpperCase())
-      }, 100)
+      // Snapshot real candidate names to scroll through the reel
+      if (currentCategory) {
+        const names = getEligibleCoupons(currentCategory.id)
+          .map((c: any) => c?.Name)
+          .filter((n: any): n is string => Boolean(n))
+        const shuffled = [...names].sort(() => Math.random() - 0.5).slice(0, 40)
+        setReelNames(shuffled.length ? shuffled : ["Selecting…"])
+      }
 
       // Start drawing sound
       if (isSoundEnabled && drawingSoundRef.current) {
@@ -122,7 +168,6 @@ export function SequentialDrawInterface({
       }
 
       return () => {
-        clearInterval(interval)
         // Stop drawing sound when animation stops
         if (drawingSoundRef.current) {
           drawingSoundRef.current.pause()
@@ -209,6 +254,9 @@ export function SequentialDrawInterface({
   const isCategoryComplete = currentCategory ? currentCategoryWinners.length >= currentCategory.winnerCount : false
   const canDraw = !isDrawing && currentCategory && !isCategoryComplete && eligibleCount > 0
 
+  // Duplicated list so the scrolling reel loops seamlessly
+  const reelLoop = reelNames.length ? [...reelNames, ...reelNames] : []
+
   return (
     <div className="space-y-8 p-6">
       {/* Sound Control Button */}
@@ -290,9 +338,45 @@ export function SequentialDrawInterface({
         <div className="flex flex-col items-center space-y-6">
           {/* Slot Machine Animation */}
           <div className="relative">
-            {/* Ambient glow behind the machine */}
-            <div className="absolute -inset-6 rounded-full bg-amber-500/20 blur-3xl" />
-            <div className="relative w-72 h-72 bg-gradient-to-br from-amber-500 via-orange-700 to-black rounded-3xl shadow-2xl border-8 border-amber-300 overflow-hidden glow-gold">
+            {/* Ambient glow behind the machine — intensifies while drawing */}
+            <div
+              className={`absolute -inset-8 rounded-full blur-3xl transition-all duration-500 ${
+                isDrawing
+                  ? "bg-amber-500/40"
+                  : currentWinner
+                    ? "bg-amber-400/35"
+                    : "bg-amber-500/20"
+              }`}
+            />
+
+            {/* Rotating spotlight rays while drawing */}
+            {isDrawing && (
+              <>
+                <div
+                  className="animate-ray absolute -inset-10 opacity-70"
+                  style={{
+                    background:
+                      "conic-gradient(from 0deg, transparent 0deg, rgba(251,191,36,0.45) 14deg, transparent 30deg, transparent 60deg, rgba(251,191,36,0.45) 74deg, transparent 90deg, transparent 120deg, rgba(251,191,36,0.45) 134deg, transparent 150deg, transparent 180deg, rgba(251,191,36,0.45) 194deg, transparent 210deg, transparent 240deg, rgba(251,191,36,0.45) 254deg, transparent 270deg, transparent 300deg, rgba(251,191,36,0.45) 314deg, transparent 330deg)",
+                    WebkitMaskImage:
+                      "radial-gradient(circle, transparent 34%, #000 40%, #000 60%, transparent 72%)",
+                    maskImage:
+                      "radial-gradient(circle, transparent 34%, #000 40%, #000 60%, transparent 72%)",
+                  }}
+                />
+                <div className="animate-pulse-ring absolute inset-0 rounded-3xl border-2 border-amber-300/60" />
+                <div
+                  className="animate-pulse-ring absolute inset-0 rounded-3xl border-2 border-amber-300/40"
+                  style={{ animationDelay: "0.55s" }}
+                />
+              </>
+            )}
+
+            {/* Confetti burst on a fresh winner */}
+            {currentWinner && !isDrawing && (
+              <Confetti key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`} />
+            )}
+
+            <div className="relative z-10 w-72 h-72 bg-gradient-to-br from-amber-500 via-orange-700 to-black rounded-3xl shadow-2xl border-8 border-amber-300 overflow-hidden glow-gold">
               {/* Slot Machine Frame */}
               <div className="absolute inset-4 bg-black rounded-xl border-4 border-amber-400/80 flex flex-col">
                 {/* Top Display */}
@@ -301,29 +385,37 @@ export function SequentialDrawInterface({
                 </div>
 
                 {/* Main Display Area */}
-                <div className="flex-1 flex items-center justify-center p-4">
+                <div className="relative flex-1 flex items-center justify-center overflow-hidden">
                   {isDrawing ? (
-                    <div className="text-center">
-                      {/* Spinning Reels Effect */}
-                      <div className="grid grid-cols-3 gap-2 mb-4">
-                        {[...Array(3)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="w-12 h-16 bg-white rounded border-2 border-orange-400 flex items-center justify-center overflow-hidden"
-                          >
-                            <div className="animate-spin text-lg font-bold text-orange-600">
-                              {spinningText[i] || "?"}
-                            </div>
+                    <div className="absolute inset-0">
+                      {/* Fade masks top & bottom */}
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black via-black/70 to-transparent z-20" />
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black via-black/70 to-transparent z-20" />
+                      {/* Center selection window */}
+                      <div className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2 h-10 rounded-md border border-amber-300/70 bg-amber-400/10 shadow-[0_0_22px_rgba(251,191,36,0.55)] z-20" />
+                      {/* Scrolling candidate names */}
+                      <div className="animate-reel absolute inset-x-0 top-0 flex flex-col will-change-transform [filter:blur(0.6px)]">
+                        {reelLoop.map((name, i) => (
+                          <div key={i} className="flex h-10 items-center justify-center px-3">
+                            <span className="font-display text-amber-100 font-semibold text-sm truncate">{name}</span>
                           </div>
                         ))}
                       </div>
-                      <div className="text-orange-300 text-xs animate-pulse">Drawing Winner...</div>
+                      {/* Status label */}
+                      <div className="absolute inset-x-0 bottom-1 z-20 text-center text-[0.6rem] uppercase tracking-[0.3em] text-amber-300/90 animate-pulse">
+                        Selecting Winner…
+                      </div>
                     </div>
                   ) : currentWinner ? (
-                    <div className="text-center animate-float-up">
-                      <Trophy className="w-14 h-14 text-amber-300 mx-auto mb-2 animate-bounce drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]" />
-                      <div className="text-[0.6rem] uppercase tracking-[0.3em] text-amber-200/80 mb-1">Winner</div>
-                      <div className="font-display text-gold-gradient text-lg font-bold px-2 break-words max-w-full leading-tight">
+                    <div className="text-center animate-winner-pop px-2">
+                      <div className="mb-2 flex justify-center">
+                        <span className="relative grid place-items-center">
+                          <span className="absolute h-16 w-16 rounded-full bg-amber-400/30 blur-md" />
+                          <Trophy className="relative w-14 h-14 text-amber-300 animate-bounce drop-shadow-[0_0_14px_rgba(251,191,36,0.85)]" />
+                        </span>
+                      </div>
+                      <div className="text-[0.6rem] uppercase tracking-[0.35em] text-amber-200/80 mb-1">★ Winner ★</div>
+                      <div className="font-display text-gold-gradient text-xl font-bold px-1 break-words max-w-full leading-tight">
                         {currentWinner.dealerName}
                       </div>
                     </div>
