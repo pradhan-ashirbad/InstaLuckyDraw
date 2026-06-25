@@ -156,6 +156,83 @@ body {
   animation: winner-pop 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* Ambient particles drifting up through the stage */
+@keyframes particle-float {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--p-op, 0.6);
+  }
+  88% {
+    opacity: var(--p-op, 0.6);
+  }
+  100% {
+    transform: translate3d(var(--p-x, 10px), -150px, 0);
+    opacity: 0;
+  }
+}
+.animate-particle {
+  animation: particle-float var(--p-dur, 7s) ease-in-out infinite;
+}
+
+/* Expanding ring at the moment of reveal */
+@keyframes winner-ring {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+.animate-winner-ring {
+  animation: winner-ring 1s ease-out forwards;
+}
+
+/* One-time light sheen sweeping across the winner name */
+@keyframes sheen {
+  0% {
+    transform: translateX(-140%) skewX(-18deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+.animate-sheen {
+  animation: sheen 1.15s ease-out 0.15s forwards;
+}
+
+/* Confetti burst from the center of the stage */
+@keyframes confetti-burst {
+  0% {
+    transform: translate3d(0, 0, 0) rotateZ(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--tx, 0), var(--ty, 200px), 0) rotateZ(var(--rot, 540deg));
+    opacity: 0;
+  }
+}
+.confetti-burst-piece {
+  position: absolute;
+  border-radius: 2px;
+  animation-name: confetti-burst;
+  animation-timing-function: cubic-bezier(0.18, 0.6, 0.3, 1);
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
 /* Celebration confetti */
 @keyframes confetti-fall {
   0% {
