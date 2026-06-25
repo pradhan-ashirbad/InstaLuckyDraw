@@ -19,6 +19,9 @@ import {
   ChevronRight,
   Download,
   Eye,
+  Trophy,
+  Crown,
+  Award,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -361,7 +364,22 @@ export default function CorporateLuckyDrawSystem() {
 
   /* =================== RENDER =================== */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-600 via-orange-800 to-black">
+    <div className="relative min-h-screen overflow-hidden bg-[#0b0705] text-white">
+      {/* ---------- Cinematic gala backdrop ---------- */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        {/* Deep base wash */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1a0f06] via-[#0d0805] to-black" />
+        {/* Warm stage glow from above */}
+        <div className="absolute -top-1/3 left-1/2 h-[80vh] w-[80vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(245,158,11,0.28),rgba(245,158,11,0.06)_55%,transparent_75%)] blur-2xl animate-spotlight" />
+        {/* Side spotlights */}
+        <div className="absolute top-1/4 -left-32 h-[55vh] w-[45vw] rounded-full bg-[radial-gradient(closest-side,rgba(251,191,36,0.18),transparent_70%)] blur-3xl animate-spotlight-slow" />
+        <div className="absolute bottom-0 -right-32 h-[55vh] w-[45vw] rounded-full bg-[radial-gradient(closest-side,rgba(234,88,12,0.18),transparent_70%)] blur-3xl animate-spotlight" />
+        {/* Subtle gold grain / texture lines */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[repeating-linear-gradient(135deg,#fbbf24_0px,#fbbf24_1px,transparent_1px,transparent_9px)]" />
+        {/* Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.75)_100%)]" />
+      </div>
+
       <div className="max-w-7xl mx-auto p-4 space-y-6">
         <Tabs defaultValue="draw" className="space-y-6">
           {/* DYNAMIC NAVIGATION - Shows/Hides based on cursor position */}
@@ -374,21 +392,27 @@ export default function CorporateLuckyDrawSystem() {
             onMouseEnter={() => setIsNavigationHovered(true)}
             onMouseLeave={() => setIsNavigationHovered(false)}
           >
-            <div className="bg-gradient-to-r from-orange-600 via-orange-800 to-black backdrop-blur-md border-b border-orange-500/30 shadow-2xl">
-              <div className="max-w-7xl mx-auto p-4">
-                <TabsList className="grid w-full grid-cols-6 bg-black/60 border-orange-500/50 backdrop-blur-md shadow-2xl">
+            <div className="bg-black/70 backdrop-blur-xl border-b border-amber-400/25 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]">
+              <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2 pr-4 border-r border-amber-400/20">
+                  <Crown className="w-5 h-5 text-amber-300" />
+                  <span className="font-display text-sm font-semibold tracking-wide text-amber-100 whitespace-nowrap">
+                    Fortune Fiesta
+                  </span>
+                </div>
+                <TabsList className="grid flex-1 grid-cols-6 bg-white/5 border border-amber-400/20 backdrop-blur-md rounded-xl p-1">
                   {[
                     ["upload", "Data Upload", <Upload key="upload" className="w-4 h-4" />],
                     ["dataview", "Data View", <Eye key="dataview" className="w-4 h-4" />],
                     ["prizes", "Prize Gallery", <Sparkles key="prizes" className="w-4 h-4" />],
                     ["manage", "Manage Prizes", <Car key="manage" className="w-4 h-4" />],
-                    ["draw", "Lucky Draw", <Sparkles key="draw" className="w-4 h-4" />],
+                    ["draw", "Lucky Draw", <Trophy key="draw" className="w-4 h-4" />],
                     ["results", "Results", <Download key="results" className="w-4 h-4" />],
                   ].map(([val, label, icon]) => (
                     <TabsTrigger
                       key={val}
                       value={val}
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 text-white font-medium flex items-center gap-2 px-4 py-3 transition-all duration-300 hover:bg-orange-500/20"
+                      className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-400 data-[state=active]:to-orange-600 data-[state=active]:text-black data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 text-amber-100/80 font-medium flex items-center justify-center gap-2 px-3 py-2.5 transition-all duration-300 hover:bg-amber-400/10 hover:text-amber-100"
                     >
                       {icon}
                       <span className="hidden sm:inline">{label}</span>
@@ -400,12 +424,38 @@ export default function CorporateLuckyDrawSystem() {
           </div>
 
           {/* Header - Always visible */}
-          <header className="text-center space-y-4 py-6 mt-4">
-            <h1 className="text-5xl md:text-6xl font-bold text-white flex items-center justify-center gap-4">
-              <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-orange-400 animate-pulse" />
-              Insta Fortune Fiesta
-              <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-orange-400 animate-pulse" />
+          <header className="text-center pt-10 pb-4 mt-2 animate-float-up">
+            {/* Eyebrow */}
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="h-px w-10 gold-rule" />
+              <span className="flex items-center gap-2 text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.45em] text-amber-300/90">
+                <Sparkles className="w-3.5 h-3.5" />
+                Corporate Excellence Awards
+                <Sparkles className="w-3.5 h-3.5" />
+              </span>
+              <span className="h-px w-10 gold-rule" />
+            </div>
+
+            {/* Title */}
+            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold leading-[1.05] tracking-tight">
+              <span className="text-gold-gradient drop-shadow-[0_2px_18px_rgba(245,158,11,0.35)]">
+                Insta Fortune Fiesta
+              </span>
             </h1>
+
+            {/* Subtitle */}
+            <p className="mt-4 text-base sm:text-lg text-amber-100/70 font-light tracking-wide">
+              Celebrating Our Partners &nbsp;·&nbsp; Live Grand Prize Draw
+            </p>
+
+            {/* Decorative divider with trophy */}
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <span className="h-px w-24 sm:w-40 gold-rule" />
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
+                <Trophy className="w-5 h-5 text-amber-300" />
+              </span>
+              <span className="h-px w-24 sm:w-40 gold-rule" />
+            </div>
           </header>
 
           {/* --------------------- UPLOAD TAB --------------------- */}
@@ -633,30 +683,36 @@ export default function CorporateLuckyDrawSystem() {
                 .map((p, idx) => (
                   <Card
                     key={p.id}
-                    className="bg-black/40 border-orange-500/30 backdrop-blur-sm overflow-hidden hover:scale-105 transition-transform"
+                    className="group relative bg-white/[0.04] border-amber-400/20 backdrop-blur-md overflow-hidden rounded-2xl transition-all duration-500 hover:-translate-y-1.5 hover:border-amber-300/60 hover:shadow-[0_24px_60px_-20px_rgba(245,158,11,0.5)]"
                   >
-                    <div className={`h-4 ${p.color}`} />
+                    <div className={`h-1.5 ${p.color}`} />
                     <CardContent className="p-6">
                       <div className="text-center space-y-4">
                         <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-white border-orange-500">
+                          <Badge
+                            variant="outline"
+                            className="text-amber-200 border-amber-400/50 bg-amber-400/5 font-display"
+                          >
                             #{idx + 1}
                           </Badge>
-                          <Badge className={`${p.color} text-white`}>
+                          <Badge className="bg-gradient-to-r from-amber-400 to-orange-600 text-black font-semibold">
                             {p.winnerCount} {p.winnerCount === 1 ? "Winner" : "Winners"}
                           </Badge>
                         </div>
-                        <img
-                          src={p.image || "/placeholder.svg"}
-                          alt={p.name}
-                          className="w-full h-48 object-cover rounded-lg"
-                          onError={(e) => {
-                            // Fallback to placeholder if image fails to load
-                            e.currentTarget.src = `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(p.name)}`
-                          }}
-                        />
-                        <h3 className="text-xl font-bold text-white">{p.name}</h3>
-                        <p className="text-orange-200">{p.description}</p>
+                        <div className="relative overflow-hidden rounded-xl ring-1 ring-amber-400/15">
+                          <img
+                            src={p.image || "/placeholder.svg"}
+                            alt={p.name}
+                            className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+                            onError={(e) => {
+                              // Fallback to placeholder if image fails to load
+                              e.currentTarget.src = `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(p.name)}`
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        </div>
+                        <h3 className="font-display text-xl font-bold text-white tracking-wide">{p.name}</h3>
+                        <p className="text-amber-100/70 text-sm">{p.description}</p>
                       </div>
                     </CardContent>
                   </Card>

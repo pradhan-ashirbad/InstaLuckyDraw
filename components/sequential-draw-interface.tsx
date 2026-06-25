@@ -233,9 +233,11 @@ export function SequentialDrawInterface({
         {/* Left Column: Current Prize Information */}
         <div className="space-y-4">
           {currentCategory && !isEventComplete ? (
-            <Card className="bg-black/40 border-orange-500/30 backdrop-blur-sm h-full">
-              <CardHeader className="text-center border-b border-orange-500/30 pb-4">
-                <CardTitle className="text-white text-lg">Current Prize</CardTitle>
+            <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl">
+              <CardHeader className="text-center border-b border-amber-400/20 pb-4">
+                <CardTitle className="font-display text-amber-200 text-sm uppercase tracking-[0.3em]">
+                  Now Presenting
+                </CardTitle>
                 {nextPrizeInfo && !isCategoryComplete && (
                   <div className="grid grid-cols-3 gap-2 text-sm text-orange-200 mt-2">
                     <div className="text-center">
@@ -254,12 +256,16 @@ export function SequentialDrawInterface({
                 )}
               </CardHeader>
               <CardContent className="p-6 text-center">
-                <img
-                  src={currentCategory.image || "/placeholder.svg"}
-                  alt={currentCategory.name}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-                <h2 className="text-xl font-bold text-white mb-2">{currentCategory.name.toUpperCase()}</h2>
+                <div className="overflow-hidden rounded-xl ring-1 ring-amber-400/25 mb-4">
+                  <img
+                    src={currentCategory.image || "/placeholder.svg"}
+                    alt={currentCategory.name}
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
+                <h2 className="font-display text-2xl font-bold text-gold-gradient mb-2">
+                  {currentCategory.name.toUpperCase()}
+                </h2>
               </CardContent>
             </Card>
           ) : isEventComplete ? (
@@ -284,12 +290,14 @@ export function SequentialDrawInterface({
         <div className="flex flex-col items-center space-y-6">
           {/* Slot Machine Animation */}
           <div className="relative">
-            <div className="w-72 h-72 bg-gradient-to-br from-orange-500 via-red-600 to-black rounded-3xl shadow-2xl border-8 border-yellow-400 overflow-hidden relative">
+            {/* Ambient glow behind the machine */}
+            <div className="absolute -inset-6 rounded-full bg-amber-500/20 blur-3xl" />
+            <div className="relative w-72 h-72 bg-gradient-to-br from-amber-500 via-orange-700 to-black rounded-3xl shadow-2xl border-8 border-amber-300 overflow-hidden glow-gold">
               {/* Slot Machine Frame */}
-              <div className="absolute inset-4 bg-black rounded-xl border-4 border-orange-400 flex flex-col">
+              <div className="absolute inset-4 bg-black rounded-xl border-4 border-amber-400/80 flex flex-col">
                 {/* Top Display */}
-                <div className="h-12 bg-gradient-to-r from-orange-600 to-red-600 flex items-center justify-center rounded-t-lg">
-                  <div className="text-white font-bold text-sm tracking-wider">LUCKY DRAW</div>
+                <div className="h-12 bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center rounded-t-lg">
+                  <div className="font-display text-black font-bold text-sm tracking-[0.3em]">GRAND DRAW</div>
                 </div>
 
                 {/* Main Display Area */}
@@ -312,9 +320,10 @@ export function SequentialDrawInterface({
                       <div className="text-orange-300 text-xs animate-pulse">Drawing Winner...</div>
                     </div>
                   ) : currentWinner ? (
-                    <div className="text-center">
-                      <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-3 animate-bounce" />
-                      <div className="text-yellow-300 text-sm font-bold px-2 break-words max-w-full">
+                    <div className="text-center animate-float-up">
+                      <Trophy className="w-14 h-14 text-amber-300 mx-auto mb-2 animate-bounce drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]" />
+                      <div className="text-[0.6rem] uppercase tracking-[0.3em] text-amber-200/80 mb-1">Winner</div>
+                      <div className="font-display text-gold-gradient text-lg font-bold px-2 break-words max-w-full leading-tight">
                         {currentWinner.dealerName}
                       </div>
                     </div>
@@ -337,7 +346,7 @@ export function SequentialDrawInterface({
                 </div>
 
                 {/* Bottom Lights */}
-                <div className="h-8 bg-gradient-to-r from-orange-600 to-red-600 flex items-center justify-center space-x-2 rounded-b-lg">
+                <div className="h-8 bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center space-x-2 rounded-b-lg">
                   {[...Array(5)].map((_, i) => (
                     <div
                       key={i}
@@ -368,7 +377,7 @@ export function SequentialDrawInterface({
                 <Button
                   onClick={handlePerformDraw}
                   disabled={!canDraw}
-                  className="px-8 py-4 text-xl font-bold bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-yellow-400"
+                  className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
                 >
                   {isDrawing ? (
                     <>
@@ -388,7 +397,7 @@ export function SequentialDrawInterface({
               {isCategoryComplete && (
                 <Button
                   onClick={handleMoveToNextCategory}
-                  className="px-8 py-4 text-xl font-bold bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-yellow-400"
+                  className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
                 >
                   <ChevronRight className="w-6 h-6 mr-3" />
                   Next Category
@@ -402,23 +411,27 @@ export function SequentialDrawInterface({
             </div>
           ) : (
             /* Event Complete Message */
-            <div className="text-center space-y-6">
-              <Card className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-yellow-400 w-full max-w-4xl">
-                <CardContent className="p-8 text-center">
+            <div className="text-center space-y-6 animate-float-up">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-[#1a0f06] via-black to-[#1a0f06] border-amber-300/50 w-full max-w-4xl rounded-2xl glow-gold">
+                <div className="pointer-events-none absolute -top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-amber-400/20 blur-3xl" />
+                <CardContent className="relative p-8 text-center">
                   <div className="space-y-6">
-                    <div className="text-5xl font-bold text-white animate-bounce">🎊 CONGRATULATIONS! 🎊</div>
-                    <div className="text-2xl font-bold text-yellow-200">All Prize Categories Complete!</div>
-                    <div className="bg-white/20 rounded-lg p-6 space-y-3">
-                      <div className="text-xl text-white">Total Winners: {winners.length}</div>
-                      <div className="text-lg text-yellow-200">Thank you to all participants!</div>
-                      <div className="text-md text-white">The Insta Fortune Fiesta has concluded successfully.</div>
+                    <div className="text-3xl animate-bounce">🏆 ✨ 🏆</div>
+                    <div className="font-display text-5xl font-extrabold text-gold-gradient">CONGRATULATIONS!</div>
+                    <div className="font-display text-2xl font-bold text-amber-100">All Prize Categories Complete!</div>
+                    <div className="bg-white/[0.05] border border-amber-400/20 rounded-xl p-6 space-y-3 backdrop-blur-sm">
+                      <div className="text-xl text-white">
+                        Total Winners: <span className="font-display font-bold text-amber-300">{winners.length}</span>
+                      </div>
+                      <div className="text-lg text-amber-100/80">Thank you to all our valued partners!</div>
+                      <div className="text-md text-amber-100/60">The Insta Fortune Fiesta has concluded successfully.</div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                       {prizeCategories.slice(0, 3).map((category, index) => {
                         const categoryWinnerCount = winners.filter((w) => w.category === category.name).length
                         return (
-                          <div key={category.id} className="bg-white/10 rounded-lg p-3">
-                            <div className="text-sm font-bold text-yellow-200">{category.name}</div>
+                          <div key={category.id} className="bg-white/[0.04] border border-amber-400/15 rounded-lg p-3">
+                            <div className="text-sm font-bold text-amber-200">{category.name}</div>
                             <div className="text-lg text-white">
                               {categoryWinnerCount}/{category.winnerCount} Winners
                             </div>
@@ -435,10 +448,10 @@ export function SequentialDrawInterface({
 
         {/* Right Column: Winners List */}
         <div className="space-y-4">
-          <Card className="bg-black/40 border-orange-500/30 backdrop-blur-sm h-full">
+          <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Trophy className="w-6 h-6 text-orange-400" />
+              <CardTitle className="flex items-center gap-2 font-display text-amber-100">
+                <Trophy className="w-6 h-6 text-amber-300" />
                 {currentCategory ? `${currentCategory.name} Winners` : "Winners List"} ({currentCategoryWinners.length}/
                 {currentCategory?.winnerCount || 0})
               </CardTitle>
@@ -461,17 +474,17 @@ export function SequentialDrawInterface({
                     .map((winner, index) => (
                       <div
                         key={`${winner.couponId}-${winner.timestamp.getTime()}`}
-                        className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-300 ${
+                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-300 ${
                           index === 0 && currentWinner?.couponId === winner.couponId
-                            ? "border-green-400 bg-green-400/20 animate-pulse"
-                            : "border-orange-500/30 bg-black/20"
+                            ? "border-amber-300 bg-amber-400/15 shadow-lg shadow-amber-500/20 animate-float-up"
+                            : "border-amber-400/15 bg-white/[0.03]"
                         }`}
                       >
                         <div className="flex flex-col items-center">
                           {index === 0 && currentWinner?.couponId === winner.couponId ? (
-                            <Trophy className="w-5 h-5 text-yellow-400 animate-bounce" />
+                            <Trophy className="w-5 h-5 text-amber-300 animate-bounce" />
                           ) : (
-                            <Trophy className="w-4 h-4 text-orange-400" />
+                            <Trophy className="w-4 h-4 text-amber-400/70" />
                           )}
                         </div>
                         <div className="flex-1">
