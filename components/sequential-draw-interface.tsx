@@ -338,6 +338,9 @@ export function SequentialDrawInterface({
                     src={currentCategory.image || "/placeholder.svg"}
                     alt={currentCategory.name}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(currentCategory.name)}`
+                    }}
                   />
                 </div>
                 <h2 className="font-display text-2xl font-bold text-gold-gradient mb-2">
