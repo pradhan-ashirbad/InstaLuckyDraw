@@ -175,6 +175,7 @@ export default function CorporateLuckyDrawSystem() {
   const [currentCategoryWinnerIndex, setCurrentCategoryWinnerIndex] = useState(0)
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentWinner, setCurrentWinner] = useState<Winner | null>(null)
+  const [drawTargetName, setDrawTargetName] = useState<string | null>(null)
   const [fileName, setFileName] = useState("")
   const [isEventComplete, setIsEventComplete] = useState(false)
 
@@ -266,10 +267,12 @@ export default function CorporateLuckyDrawSystem() {
       return
     }
 
-    setIsDrawing(true)
-    await new Promise((r) => setTimeout(r, 4000)) // fake spin delay
-
+    // Pick the winner up front so the reel can land precisely on them
     const selected = eligible[Math.floor(Math.random() * eligible.length)]
+    setDrawTargetName(selected.Name)
+    setIsDrawing(true)
+    await new Promise((r) => setTimeout(r, 4000)) // spin duration
+
     const newWinner: Winner = {
       couponId: selected["Coupon Number"],
       dealerId: selected["Customer Id"],
@@ -743,6 +746,7 @@ export default function CorporateLuckyDrawSystem() {
                 currentCategoryWinnerIndex={currentCategoryWinnerIndex}
                 isDrawing={isDrawing}
                 currentWinner={currentWinner}
+                targetName={drawTargetName}
                 isEventComplete={isEventComplete}
                 progress={getProgress()}
                 onPerformDraw={performNextDraw}

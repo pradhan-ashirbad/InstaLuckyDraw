@@ -130,27 +130,6 @@ body {
   animation: winner-pop 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Ambient particles drifting up through the stage */
-@keyframes particle-float {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0;
-  }
-  12% {
-    opacity: var(--p-op, 0.6);
-  }
-  88% {
-    opacity: var(--p-op, 0.6);
-  }
-  100% {
-    transform: translate3d(var(--p-x, 10px), -150px, 0);
-    opacity: 0;
-  }
-}
-.animate-particle {
-  animation: particle-float var(--p-dur, 7s) ease-in-out infinite;
-}
-
 /* Expanding ring at the moment of reveal */
 @keyframes winner-ring {
   0% {

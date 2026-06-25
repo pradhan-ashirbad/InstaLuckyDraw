@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX } from "lucide-react"
@@ -33,6 +33,7 @@ interface SequentialDrawInterfaceProps {
   currentCategoryWinnerIndex: number
   isDrawing: boolean
   currentWinner: Winner | null
+  targetName?: string | null
   isEventComplete: boolean
   progress: { current: number; total: number; percentage: number }
   onPerformDraw: () => void
@@ -48,6 +49,7 @@ export function SequentialDrawInterface({
   currentCategoryWinnerIndex,
   isDrawing,
   currentWinner,
+  targetName,
   isEventComplete,
   progress,
   onPerformDraw,
@@ -56,15 +58,17 @@ export function SequentialDrawInterface({
   winners,
   onMoveToNextCategory,
 }: SequentialDrawInterfaceProps) {
-  const [reelNames, setReelNames] = useState<string[]>([])
+  // The reel pool plus the index that holds the actual winner to land on
+  const [reelData, setReelData] = useState<{ names: string[]; targetPos: number }>({ names: [], targetPos: 0 })
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
 
-  // Momentum-driven name reel (rAF) for a natural spin-and-settle feel
+  // rAF-driven name reel that spins, decelerates and lands on the winner
   const reelRef = useRef<HTMLDivElement>(null)
   const thunkRef = useRef<HTMLDivElement>(null)
   const reelRafRef = useRef<number | null>(null)
   const ROW_H = 48
   const VIEW_H = 176 // reel viewport height (matches h-44)
+  const REEL_COPIES = 6
   
   // Audio refs for different sound effects
   const drawingSoundRef = useRef<HTMLAudioElement | null>(null)
@@ -117,15 +121,24 @@ export function SequentialDrawInterface({
   // Handle drawing animation and sound
   useEffect(() => {
     if (isDrawing) {
-      // Snapshot real candidate names to scroll through the reel
+      // Snapshot real candidate names, guaranteeing the actual winner is in the
+      // pool so the reel can land on them. Remember where the winner sits.
       if (currentCategory) {
         const names = getEligibleCoupons(currentCategory.id)
           .map((c: any) => c?.Name)
           .filter((n: any): n is string => Boolean(n))
         let pool = [...names].sort(() => Math.random() - 0.5).slice(0, 40)
-        if (pool.length === 0) pool = ["Selecting…"]
-        while (pool.length < 12) pool = [...pool, ...pool] // pad short pools for a full reel
-        setReelNames(pool)
+        if (pool.length === 0) pool = [targetName || "Selecting…"]
+        while (pool.length < 14) pool = [...pool, ...pool] // pad short pools for a full reel
+
+        // Ensure the winner appears exactly once at a known landing position
+        let targetPos = Math.floor(pool.length / 2)
+        if (targetName) {
+          const existing = pool.indexOf(targetName)
+          if (existing >= 0) targetPos = existing
+          else pool[targetPos] = targetName
+        }
+        setReelData({ names: pool, targetPos })
       }
 
       // Start drawing sound
@@ -151,17 +164,20 @@ export function SequentialDrawInterface({
   }, [isDrawing, isSoundEnabled])
 
   // Drive the reel over a fixed timeline: fast spin, hard deceleration in the
-  // final ~1s, then it lands exactly on a centered row and "thunks" into place.
+  // final ~1s, landing precisely on the winner's row with a "thunk" settle.
   useEffect(() => {
-    if (!isDrawing || reelNames.length === 0) return
-    const total = ROW_H * reelNames.length
+    const N = reelData.names.length
+    if (!isDrawing || N === 0) return
+    const oneCopy = ROW_H * N
     const SPIN_MS = 3600 // settles a touch before the parent's draw completes
+    const centerAdjust = ROW_H / 2 - VIEW_H / 2 // centers a row in the focus window
 
-    const startOffset = Math.random() * total
-    // Travel several loops, then nudge so a row sits dead-center in the window.
-    const centerRem = (((ROW_H / 2 - VIEW_H / 2) % ROW_H) + ROW_H) % ROW_H
-    let finalOffset = startOffset + total * 3 + Math.random() * total
-    finalOffset += (((centerRem - (finalOffset % ROW_H)) % ROW_H) + ROW_H) % ROW_H
+    // Start within an early copy (rows exist above), land the winner row inside
+    // a late copy (rows exist below) so the window is never blank.
+    const startRow = Math.floor(Math.random() * N)
+    const startOffset = oneCopy + startRow * ROW_H + centerAdjust
+    const landIndex = (REEL_COPIES - 2) * N + reelData.targetPos
+    const finalOffset = landIndex * ROW_H + centerAdjust
     const dist = finalOffset - startOffset
 
     // easeOutQuint — near-linear early, very aggressive slowdown at the tail
@@ -173,17 +189,15 @@ export function SequentialDrawInterface({
     const tick = (now: number) => {
       const t = Math.min((now - start) / SPIN_MS, 1)
       const offset = startOffset + dist * ease(t)
-      if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-(offset % total)}px, 0)`
+      if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-offset}px, 0)`
       if (t < 1) {
         reelRafRef.current = requestAnimationFrame(tick)
       } else if (!landed) {
         landed = true
-        // snap to the exact aligned row and play the settle bounce
-        if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-(finalOffset % total)}px, 0)`
+        if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-finalOffset}px, 0)`
         if (thunkRef.current) {
           thunkRef.current.classList.remove("animate-reel-thunk")
-          // reflow so the animation can replay
-          void thunkRef.current.offsetWidth
+          void thunkRef.current.offsetWidth // reflow so the bounce can replay
           thunkRef.current.classList.add("animate-reel-thunk")
         }
       }
@@ -193,7 +207,7 @@ export function SequentialDrawInterface({
       if (reelRafRef.current) cancelAnimationFrame(reelRafRef.current)
       if (thunkRef.current) thunkRef.current.classList.remove("animate-reel-thunk")
     }
-  }, [isDrawing, reelNames])
+  }, [isDrawing, reelData])
 
   // Handle winner announcement sound
   useEffect(() => {
@@ -266,23 +280,11 @@ export function SequentialDrawInterface({
   const isCategoryComplete = currentCategory ? currentCategoryWinners.length >= currentCategory.winnerCount : false
   const canDraw = !isDrawing && currentCategory && !isCategoryComplete && eligibleCount > 0
 
-  // Tripled list so the momentum reel always has content below the offset
-  const reelLoop = reelNames.length ? [...reelNames, ...reelNames, ...reelNames] : []
-
-  // Ambient gold particles drifting up through the draw stage
-  const stageParticles = useMemo(
-    () =>
-      Array.from({ length: 16 }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        size: 2 + Math.random() * 4,
-        drift: (Math.random() * 2 - 1) * 26,
-        duration: 5 + Math.random() * 5,
-        delay: Math.random() * 5,
-        opacity: 0.35 + Math.random() * 0.45,
-      })),
-    [],
-  )
+  // Repeat the pool across several copies so the reel always has rows above and
+  // below the visible window throughout the spin (no blanks).
+  const reelLoop = reelData.names.length
+    ? Array.from({ length: REEL_COPIES * reelData.names.length }, (_, i) => reelData.names[i % reelData.names.length])
+    : []
 
   return (
     <div className="space-y-8 p-6">
@@ -372,15 +374,15 @@ export function SequentialDrawInterface({
               }`}
             />
 
-            {/* Rotating spotlight rays while drawing */}
+            {/* Symmetric rotating sunburst while drawing — 16 evenly spaced rays */}
             {isDrawing && (
               <div
-                className="animate-ray absolute -inset-12 opacity-60"
+                className="animate-ray absolute -inset-12 opacity-50"
                 style={{
                   background:
-                    "conic-gradient(from 0deg, transparent 0deg, rgba(251,191,36,0.4) 12deg, transparent 28deg, transparent 62deg, rgba(251,191,36,0.4) 74deg, transparent 90deg, transparent 122deg, rgba(251,191,36,0.4) 134deg, transparent 150deg, transparent 182deg, rgba(251,191,36,0.4) 194deg, transparent 210deg, transparent 242deg, rgba(251,191,36,0.4) 254deg, transparent 270deg, transparent 302deg, rgba(251,191,36,0.4) 314deg, transparent 330deg)",
-                  WebkitMaskImage: "radial-gradient(circle, transparent 40%, #000 48%, #000 66%, transparent 78%)",
-                  maskImage: "radial-gradient(circle, transparent 40%, #000 48%, #000 66%, transparent 78%)",
+                    "repeating-conic-gradient(from 0deg, rgba(251,191,36,0.32) 0deg, rgba(251,191,36,0.32) 5deg, transparent 5deg, transparent 22.5deg)",
+                  WebkitMaskImage: "radial-gradient(circle, transparent 42%, #000 52%, #000 68%, transparent 82%)",
+                  maskImage: "radial-gradient(circle, transparent 42%, #000 52%, #000 68%, transparent 82%)",
                 }}
               />
             )}
@@ -410,27 +412,6 @@ export function SequentialDrawInterface({
                     "radial-gradient(120% 75% at 50% 0%, rgba(251,191,36,0.32), rgba(251,191,36,0.07) 42%, transparent 70%)",
                 }}
               />
-
-              {/* drifting ambient particles */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                {stageParticles.map((p) => (
-                  <span
-                    key={p.id}
-                    className="animate-particle absolute rounded-full bg-amber-200"
-                    style={{
-                      left: `${p.left}%`,
-                      bottom: "-10px",
-                      width: `${p.size}px`,
-                      height: `${p.size}px`,
-                      filter: "blur(0.5px)",
-                      ["--p-x" as any]: `${p.drift}px`,
-                      ["--p-dur" as any]: `${p.duration}s`,
-                      ["--p-op" as any]: p.opacity,
-                      animationDelay: `${p.delay}s`,
-                    }}
-                  />
-                ))}
-              </div>
 
               {/* eyebrow */}
               <div className="absolute inset-x-0 top-5 z-10 text-center font-display text-[0.62rem] font-semibold uppercase tracking-[0.42em] text-amber-200/85">
