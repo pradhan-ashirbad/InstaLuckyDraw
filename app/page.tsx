@@ -415,17 +415,6 @@ export default function CorporateLuckyDrawSystem() {
 
           {/* Header - Always visible */}
           <header className="text-center pt-10 pb-4 mt-2 animate-float-up">
-            {/* Eyebrow */}
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <span className="h-px w-10 gold-rule" />
-              <span className="flex items-center gap-2 text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.45em] text-amber-300/90">
-                <Sparkles className="w-3.5 h-3.5" />
-                Corporate Excellence Awards
-                <Sparkles className="w-3.5 h-3.5" />
-              </span>
-              <span className="h-px w-10 gold-rule" />
-            </div>
-
             {/* Title */}
             <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold leading-[1.05] tracking-tight">
               <span className="text-gold-gradient drop-shadow-[0_2px_18px_rgba(245,158,11,0.35)]">
