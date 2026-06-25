@@ -365,19 +365,14 @@ export default function CorporateLuckyDrawSystem() {
   /* =================== RENDER =================== */
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b0705] text-white">
-      {/* ---------- Cinematic gala backdrop ---------- */}
+      {/* ---------- Calm gala backdrop (static) ---------- */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         {/* Deep base wash */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1a0f06] via-[#0d0805] to-black" />
-        {/* Warm stage glow from above */}
-        <div className="absolute -top-1/3 left-1/2 h-[80vh] w-[80vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(245,158,11,0.28),rgba(245,158,11,0.06)_55%,transparent_75%)] blur-2xl animate-spotlight" />
-        {/* Side spotlights */}
-        <div className="absolute top-1/4 -left-32 h-[55vh] w-[45vw] rounded-full bg-[radial-gradient(closest-side,rgba(251,191,36,0.18),transparent_70%)] blur-3xl animate-spotlight-slow" />
-        <div className="absolute bottom-0 -right-32 h-[55vh] w-[45vw] rounded-full bg-[radial-gradient(closest-side,rgba(234,88,12,0.18),transparent_70%)] blur-3xl animate-spotlight" />
-        {/* Subtle gold grain / texture lines */}
-        <div className="absolute inset-0 opacity-[0.04] bg-[repeating-linear-gradient(135deg,#fbbf24_0px,#fbbf24_1px,transparent_1px,transparent_9px)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#160d05] via-[#0c0704] to-black" />
+        {/* Single soft, static warm glow from above */}
+        <div className="absolute -top-1/4 left-1/2 h-[70vh] w-[70vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(245,158,11,0.16),transparent_70%)] blur-3xl" />
         {/* Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.75)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.7)_100%)]" />
       </div>
 
       <div className="max-w-7xl mx-auto p-4 space-y-6">

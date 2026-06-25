@@ -7,57 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX } from "lucide-react"
 
-/* -------------------- Celebration confetti -------------------- */
-const CONFETTI_COLORS = ["#fbbf24", "#f59e0b", "#fde68a", "#fff7cc", "#ea580c", "#fca5a5", "#facc15"]
-
-function Confetti() {
-  const pieces = useMemo(
-    () =>
-      Array.from({ length: 96 }, (_, i) => {
-        const angle = Math.random() * Math.PI * 2
-        const dist = 60 + Math.random() * 230
-        const tx = Math.cos(angle) * dist
-        // bias travel downward so it reads like a celebratory shower
-        const ty = Math.sin(angle) * dist * 0.55 + 70 + Math.random() * 200
-        return {
-          id: i,
-          tx,
-          ty,
-          size: 6 + Math.random() * 9,
-          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-          rot: (Math.random() * 2 - 1) * 900,
-          duration: 1.5 + Math.random() * 1.7,
-          delay: Math.random() * 0.14,
-        }
-      }),
-    [],
-  )
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-30">
-      {pieces.map((p) => (
-        <span
-          key={p.id}
-          className="confetti-burst-piece"
-          style={{
-            left: "50%",
-            top: "42%",
-            width: `${p.size}px`,
-            height: `${p.size * 0.5}px`,
-            background: p.color,
-            animationDelay: `${p.delay}s`,
-            animationDuration: `${p.duration}s`,
-            // custom props consumed by the confetti-burst keyframes
-            ["--tx" as any]: `${p.tx}px`,
-            ["--ty" as any]: `${p.ty}px`,
-            ["--rot" as any]: `${p.rot}deg`,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
 interface PrizeCategory {
   id: string
   name: string
@@ -112,8 +61,10 @@ export function SequentialDrawInterface({
 
   // Momentum-driven name reel (rAF) for a natural spin-and-settle feel
   const reelRef = useRef<HTMLDivElement>(null)
+  const thunkRef = useRef<HTMLDivElement>(null)
   const reelRafRef = useRef<number | null>(null)
   const ROW_H = 48
+  const VIEW_H = 176 // reel viewport height (matches h-44)
   
   // Audio refs for different sound effects
   const drawingSoundRef = useRef<HTMLAudioElement | null>(null)
@@ -199,26 +150,48 @@ export function SequentialDrawInterface({
     }
   }, [isDrawing, isSoundEnabled])
 
-  // Drive the name reel with real momentum: fast spin that smoothly decelerates
+  // Drive the reel over a fixed timeline: fast spin, hard deceleration in the
+  // final ~1s, then it lands exactly on a centered row and "thunks" into place.
   useEffect(() => {
     if (!isDrawing || reelNames.length === 0) return
     const total = ROW_H * reelNames.length
-    let offset = Math.random() * total
-    let vel = 2900 // px/s
-    let last = performance.now()
+    const SPIN_MS = 3600 // settles a touch before the parent's draw completes
+
+    const startOffset = Math.random() * total
+    // Travel several loops, then nudge so a row sits dead-center in the window.
+    const centerRem = (((ROW_H / 2 - VIEW_H / 2) % ROW_H) + ROW_H) % ROW_H
+    let finalOffset = startOffset + total * 3 + Math.random() * total
+    finalOffset += (((centerRem - (finalOffset % ROW_H)) % ROW_H) + ROW_H) % ROW_H
+    const dist = finalOffset - startOffset
+
+    // easeOutQuint — near-linear early, very aggressive slowdown at the tail
+    const ease = (t: number) => 1 - Math.pow(1 - t, 5)
+
+    const start = performance.now()
+    let landed = false
 
     const tick = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.05)
-      last = now
-      offset = (offset + vel * dt) % total
-      // exponential ease-out, floored so the reel keeps gliding instead of freezing
-      vel = Math.max(vel * Math.pow(0.5, dt / 1.7), 280)
-      if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-offset}px, 0)`
-      reelRafRef.current = requestAnimationFrame(tick)
+      const t = Math.min((now - start) / SPIN_MS, 1)
+      const offset = startOffset + dist * ease(t)
+      if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-(offset % total)}px, 0)`
+      if (t < 1) {
+        reelRafRef.current = requestAnimationFrame(tick)
+      } else if (!landed) {
+        landed = true
+        // snap to the exact aligned row and play the settle bounce
+        if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-(finalOffset % total)}px, 0)`
+        if (thunkRef.current) {
+          thunkRef.current.classList.remove("animate-reel-thunk")
+          // reflow so the animation can replay
+          void thunkRef.current.offsetWidth
+          thunkRef.current.classList.add("animate-reel-thunk")
+        }
+      }
     }
     reelRafRef.current = requestAnimationFrame(tick)
     return () => {
       if (reelRafRef.current) cancelAnimationFrame(reelRafRef.current)
+      if (thunkRef.current) thunkRef.current.classList.remove("animate-reel-thunk")
     }
   }, [isDrawing, reelNames])
 
@@ -412,14 +385,14 @@ export function SequentialDrawInterface({
               />
             )}
 
-            {/* Expanding ring + confetti burst on a fresh winner */}
+            {/* Single soft ring on a fresh winner */}
             {currentWinner && !isDrawing && (
-              <>
-                <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
-                  <div className="animate-winner-ring h-44 w-44 rounded-full border-2 border-amber-300/70" />
-                </div>
-                <Confetti key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`} />
-              </>
+              <div
+                key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`}
+                className="pointer-events-none absolute inset-0 z-20 grid place-items-center"
+              >
+                <div className="animate-winner-ring h-44 w-44 rounded-full border-2 border-amber-300/70" />
+              </div>
             )}
 
             {/* The glass stage */}
@@ -470,15 +443,18 @@ export function SequentialDrawInterface({
                   <div className="relative h-44 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,#000_22%,#000_78%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_22%,#000_78%,transparent)]">
                     {/* focus window */}
                     <div className="pointer-events-none absolute inset-x-1 top-1/2 z-20 h-12 -translate-y-1/2 rounded-lg border border-amber-300/55 bg-gradient-to-r from-amber-400/5 via-amber-300/15 to-amber-400/5 shadow-[0_0_30px_rgba(251,191,36,0.45)]" />
-                    {/* momentum reel */}
-                    <div ref={reelRef} className="absolute inset-x-0 top-0 will-change-transform [filter:blur(0.4px)]">
-                      {reelLoop.map((name, i) => (
-                        <div key={i} className="flex h-12 items-center justify-center px-3">
-                          <span className="font-display text-base font-semibold text-amber-50/90 truncate">
-                            {name}
-                          </span>
-                        </div>
-                      ))}
+                    {/* settle/thunk layer */}
+                    <div ref={thunkRef} className="absolute inset-x-0 top-0">
+                      {/* momentum reel */}
+                      <div ref={reelRef} className="will-change-transform [filter:blur(0.4px)]">
+                        {reelLoop.map((name, i) => (
+                          <div key={i} className="flex h-12 items-center justify-center px-3">
+                            <span className="font-display text-base font-semibold text-amber-50/90 truncate">
+                              {name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : currentWinner ? (
