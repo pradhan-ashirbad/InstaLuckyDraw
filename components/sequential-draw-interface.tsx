@@ -306,16 +306,13 @@ export function SequentialDrawInterface({
       </div> */}
 
       {/* Main Draw Interface - Three Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)_360px] gap-6 lg:gap-16 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)_360px] gap-6 lg:gap-16 items-stretch">
         {/* Left Column: Current Prize Information */}
-        <div className="space-y-4">
+        <div className="h-full">
           {currentCategory && !isEventComplete ? (
             <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl overflow-hidden">
               <CardContent className="p-0">
                 <div className="relative">
-                  <span className="absolute left-4 top-4 z-10 text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-amber-100/70">
-                    Prize Image
-                  </span>
                   <img
                     src={currentCategory.image || "/placeholder.svg"}
                     alt={currentCategory.name}
@@ -383,9 +380,9 @@ export function SequentialDrawInterface({
         </div>
 
         {/* Middle Column: Slot Machine Animation and Button */}
-        <div className="flex flex-col items-center space-y-6">
+        <div className="grid h-full grid-rows-[1fr_auto] items-stretch justify-center gap-6">
           {/* Cinematic Draw Stage */}
-          <div className="relative">
+          <div className="relative flex min-h-0 items-center justify-center">
             {/* Ambient backglow — intensifies while drawing / on win */}
             <div
               className={`absolute -inset-10 rounded-full blur-3xl transition-all duration-700 ${
@@ -417,7 +414,7 @@ export function SequentialDrawInterface({
             )}
 
             {/* The glass stage */}
-            <div className="relative z-10 aspect-square w-72 overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-b from-white/[0.07] via-white/[0.02] to-black/50 backdrop-blur-xl shadow-[0_30px_80px_-22px_rgba(245,158,11,0.55)]">
+            <div className="relative z-10 h-full w-full max-w-md overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-b from-white/[0.07] via-white/[0.02] to-black/50 backdrop-blur-xl shadow-[0_30px_80px_-22px_rgba(245,158,11,0.55)]">
               {/* inner gold hairline */}
               <div className="pointer-events-none absolute inset-[3px] rounded-[1.7rem] ring-1 ring-amber-200/15" />
 
