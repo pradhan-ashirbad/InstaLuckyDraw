@@ -422,11 +422,6 @@ export default function CorporateLuckyDrawSystem() {
               </span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="mt-4 text-base sm:text-lg text-amber-100/70 font-light tracking-wide">
-              Celebrating Our Partners &nbsp;·&nbsp; Live Grand Prize Draw
-            </p>
-
             {/* Decorative divider with trophy */}
             <div className="mt-6 flex items-center justify-center gap-4">
               <span className="h-px w-24 sm:w-40 gold-rule" />

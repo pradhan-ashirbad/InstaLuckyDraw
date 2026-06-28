@@ -417,7 +417,7 @@ export function SequentialDrawInterface({
               />
 
               {/* eyebrow */}
-              <div className="absolute inset-x-0 top-5 z-10 text-center font-display text-[0.62rem] font-semibold uppercase tracking-[0.42em] text-amber-200/85">
+              <div className="absolute inset-x-0 top-5 z-10 text-center font-display text-[0.62rem] font-semibold uppercase tracking-[0.42em] text-white">
                 Grand Prize Draw
               </div>
 
@@ -453,7 +453,7 @@ export function SequentialDrawInterface({
                         <Trophy className="relative h-14 w-14 text-amber-300 drop-shadow-[0_0_16px_rgba(251,191,36,0.9)]" />
                       </span>
                     </div>
-                    <div className="mb-1.5 text-[0.62rem] uppercase tracking-[0.42em] text-amber-200/80">Winner</div>
+                    <div className="mb-1.5 text-[0.62rem] uppercase tracking-[0.42em] text-white">Winner</div>
                     <div className="font-display text-gold-gradient text-2xl font-bold leading-tight break-words">
                       {currentWinner.dealerName}
                     </div>
