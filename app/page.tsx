@@ -442,8 +442,8 @@ export default function CorporateLuckyDrawSystem() {
             {/* Decorative divider with trophy */}
             <div className="mt-6 flex items-center justify-center gap-4">
               <span className="h-px w-24 sm:w-40 gold-rule" />
-              <span className="grid h-11 w-11 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
-                <Trophy className="w-5 h-5 text-amber-300" />
+              <span className="grid h-14 w-14 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold p-2">
+                <img src="/gromor-logo.png" alt="" className="h-full w-full object-contain" />
               </span>
               <span className="h-px w-24 sm:w-40 gold-rule" />
             </div>
