@@ -330,6 +330,22 @@ export default function CorporateLuckyDrawSystem() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const columns = dealerData.length ? Object.keys(dealerData[0]) : []
 
+  /* ---------- Top 10 dealers by coupon count ---------- */
+  const topDealers = useMemo(() => {
+    const byDealer = new Map<string, DealerData>()
+    for (const row of dealerData) {
+      const key = row["Customer Id"] || row.Name
+      const count = Number(row["Count of Total Coupons"]) || 0
+      const existing = byDealer.get(key)
+      if (!existing || count > (Number(existing["Count of Total Coupons"]) || 0)) {
+        byDealer.set(key, row)
+      }
+    }
+    return Array.from(byDealer.values())
+      .sort((a, b) => (Number(b["Count of Total Coupons"]) || 0) - (Number(a["Count of Total Coupons"]) || 0))
+      .slice(0, 10)
+  }, [dealerData])
+
   /* ---------- Export current view ---------- */
   const exportCurrentView = () => {
     if (!filteredData.length) {
@@ -390,10 +406,11 @@ export default function CorporateLuckyDrawSystem() {
                     Fortune Fiesta
                   </span>
                 </div>
-                <TabsList className="grid flex-1 grid-cols-6 bg-white/5 border border-amber-400/20 backdrop-blur-md rounded-xl p-1">
+                <TabsList className="grid flex-1 grid-cols-7 bg-white/5 border border-amber-400/20 backdrop-blur-md rounded-xl p-1">
                   {[
                     ["upload", "Data Upload", <Upload key="upload" className="w-4 h-4" />],
                     ["dataview", "Data View", <Eye key="dataview" className="w-4 h-4" />],
+                    ["leaderboard", "Top Dealers", <Award key="leaderboard" className="w-4 h-4" />],
                     ["prizes", "Prize Gallery", <Sparkles key="prizes" className="w-4 h-4" />],
                     ["manage", "Manage Prizes", <Car key="manage" className="w-4 h-4" />],
                     ["draw", "Lucky Draw", <Trophy key="draw" className="w-4 h-4" />],
@@ -645,6 +662,42 @@ export default function CorporateLuckyDrawSystem() {
                   )}
                 </CardContent>
               </Card>
+            )}
+          </TabsContent>
+
+          {/* --------------------- TOP 10 DEALERS --------------------- */}
+          <TabsContent value="leaderboard" className="space-y-4">
+            {topDealers.length === 0 ? (
+              <Card className="bg-white/[0.04] border-amber-400/20 backdrop-blur-md rounded-2xl">
+                <CardContent className="text-center py-16">
+                  <Award className="w-12 h-12 text-amber-400/50 mx-auto mb-4" />
+                  <p className="text-amber-100/70">Upload participant data to see the top dealers.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                {topDealers.map((dealer, idx) => (
+                  <Card
+                    key={dealer["Customer Id"] || dealer.Name}
+                    className={`relative bg-white/[0.04] border-amber-400/20 backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/60 ${
+                      idx === 0 ? "ring-1 ring-amber-300/60 shadow-[0_18px_50px_-18px_rgba(245,158,11,0.5)]" : ""
+                    }`}
+                  >
+                    <CardContent className="p-4 text-center space-y-2">
+                      <div className="mx-auto grid h-9 w-9 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 font-display text-sm font-bold text-amber-200">
+                        #{idx + 1}
+                      </div>
+                      <div className="font-display text-base font-semibold text-white truncate" title={dealer.Name}>
+                        {dealer.Name}
+                      </div>
+                      {dealer.District && <div className="text-xs text-amber-100/55 truncate">{dealer.District}</div>}
+                      <Badge className="bg-gradient-to-r from-amber-400 to-orange-600 text-black font-semibold">
+                        {Number(dealer["Count of Total Coupons"]) || 0} Coupons
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
 
