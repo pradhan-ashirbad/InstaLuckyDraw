@@ -428,11 +428,6 @@ export function SequentialDrawInterface({
                 }}
               />
 
-              {/* eyebrow */}
-              <div className="absolute inset-x-0 top-5 z-10 text-center font-display text-[0.62rem] font-semibold uppercase tracking-[0.42em] text-white">
-                Grand Prize Draw
-              </div>
-
               {/* center stage content */}
               <div className="absolute inset-x-5 top-1/2 z-10 -translate-y-1/2">
                 {isDrawing ? (
