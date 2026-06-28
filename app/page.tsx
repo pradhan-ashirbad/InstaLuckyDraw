@@ -386,7 +386,7 @@ export default function CorporateLuckyDrawSystem() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.7)_100%)]" />
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 space-y-6">
+      <div className="max-w-[1700px] mx-auto p-4 space-y-6">
         <Tabs defaultValue="draw" className="space-y-6">
           {/* DYNAMIC NAVIGATION - Shows/Hides based on cursor position */}
           <div
@@ -399,7 +399,7 @@ export default function CorporateLuckyDrawSystem() {
             onMouseLeave={() => setIsNavigationHovered(false)}
           >
             <div className="bg-black/70 backdrop-blur-xl border-b border-amber-400/25 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]">
-              <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+              <div className="max-w-[1700px] mx-auto px-4 py-3 flex items-center gap-4">
                 <div className="hidden md:flex items-center gap-2 pr-4 border-r border-amber-400/20">
                   <Crown className="w-5 h-5 text-amber-300" />
                   <span className="font-display text-sm font-semibold tracking-wide text-amber-100 whitespace-nowrap">

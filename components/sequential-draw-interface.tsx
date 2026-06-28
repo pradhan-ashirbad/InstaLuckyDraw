@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX } from "lucide-react"
+import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX, Star } from "lucide-react"
 
 interface PrizeCategory {
   id: string
@@ -306,46 +306,62 @@ export function SequentialDrawInterface({
       </div> */}
 
       {/* Main Draw Interface - Three Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)_360px] gap-6 lg:gap-16 items-start">
         {/* Left Column: Current Prize Information */}
         <div className="space-y-4">
           {currentCategory && !isEventComplete ? (
-            <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl">
-              <CardHeader className="text-center border-b border-amber-400/20 pb-4">
-                <CardTitle className="font-display text-amber-200 text-sm uppercase tracking-[0.3em]">
-                  Now Presenting
-                </CardTitle>
-                {nextPrizeInfo && !isCategoryComplete && (
-                  <div className="grid grid-cols-3 gap-2 text-sm text-orange-200 mt-2">
-                    <div className="text-center">
-                      <div className="font-bold text-white">{nextPrizeInfo.current}</div>
-                      <div className="text-xs">of {nextPrizeInfo.total}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-white">{nextPrizeInfo.remaining}</div>
-                      <div className="text-xs">remaining</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-white">{eligibleCount}</div>
-                      <div className="text-xs">eligible coupons</div>
-                    </div>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent className="p-6 text-center">
-                <div className="overflow-hidden rounded-xl ring-1 ring-amber-400/25 mb-4">
+            <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl overflow-hidden">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <span className="absolute left-4 top-4 z-10 text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-amber-100/70">
+                    Prize Image
+                  </span>
                   <img
                     src={currentCategory.image || "/placeholder.svg"}
                     alt={currentCategory.name}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-56 object-cover"
                     onError={(e) => {
                       e.currentTarget.src = `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(currentCategory.name)}`
                     }}
                   />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/10" />
+                  <h2 className="absolute inset-x-4 bottom-4 z-10 text-center font-display text-xl font-bold leading-snug text-white">
+                    {currentCategory.name}
+                  </h2>
                 </div>
-                <h2 className="font-display text-2xl font-bold text-gold-gradient mb-2">
-                  {currentCategory.name.toUpperCase()}
-                </h2>
+
+                <div className="space-y-4 p-5">
+                  {nextPrizeInfo && !isCategoryComplete && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
+                        <div className="font-display text-lg font-bold text-white">
+                          {nextPrizeInfo.current} <span className="text-sm text-amber-200/60">of {nextPrizeInfo.total}</span>
+                        </div>
+                        <div className="mt-0.5 text-[0.58rem] uppercase tracking-[0.2em] text-amber-200/50">Current</div>
+                      </div>
+                      <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
+                        <div className="font-display text-lg font-bold text-white">{nextPrizeInfo.remaining}</div>
+                        <div className="mt-0.5 text-[0.58rem] uppercase tracking-[0.2em] text-amber-200/50">Remaining</div>
+                      </div>
+                      <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
+                        <div className="font-display text-lg font-bold text-white">{eligibleCount}</div>
+                        <div className="mt-0.5 text-[0.58rem] uppercase tracking-[0.2em] text-amber-200/50">Eligible</div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="h-1 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
+                      style={{
+                        width: `${
+                          currentCategory.winnerCount
+                            ? (currentCategoryWinners.length / currentCategory.winnerCount) * 100
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ) : isEventComplete ? (
@@ -473,9 +489,13 @@ export function SequentialDrawInterface({
                   </div>
                 ) : (
                   <div className="text-center">
-                    <Trophy className="mx-auto mb-3 h-14 w-14 text-amber-300/90 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]" />
-                    <div className="font-display text-lg font-semibold tracking-[0.3em] text-amber-100/90">READY</div>
-                    <div className="mt-1 text-[0.6rem] uppercase tracking-[0.3em] text-amber-200/50">Press Draw</div>
+                    <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
+                      <Star className="h-7 w-7 text-amber-300" />
+                    </div>
+                    <div className="font-display text-xl font-bold tracking-wide text-white">READY TO DRAW</div>
+                    <div className="mt-2 text-[0.62rem] uppercase tracking-[0.3em] text-amber-200/70">
+                      Press the button to begin
+                    </div>
                   </div>
                 )}
               </div>
@@ -510,7 +530,7 @@ export function SequentialDrawInterface({
                   ) : (
                     <>
                       <Trophy className="w-6 h-6 mr-3" />
-                      Draw
+                      Draw Winner
                     </>
                   )}
                 </Button>
@@ -574,19 +594,17 @@ export function SequentialDrawInterface({
           <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-display text-amber-100">
-                <Trophy className="w-6 h-6 text-amber-300" />
-                {currentCategory ? `${currentCategory.name} Winners` : "Winners List"} ({currentCategoryWinners.length}/
+                <Star className="w-5 h-5 text-amber-300" />
+                {currentCategory ? currentCategory.name : "Winners List"} ({currentCategoryWinners.length}/
                 {currentCategory?.winnerCount || 0})
               </CardTitle>
             </CardHeader>
             <CardContent className="h-80 overflow-y-auto">
               {currentCategoryWinners.length === 0 ? (
                 <div className="text-center py-8">
-                  <Trophy className="w-12 h-12 text-orange-500 mx-auto mb-4 opacity-50" />
-                  <p className="text-orange-200">
-                    {currentCategory
-                      ? `No winners yet for ${currentCategory.name}. Start drawing to see results here.`
-                      : "No winners yet. Start drawing to see results here."}
+                  <Star className="w-10 h-10 text-amber-300/60 mx-auto mb-4" />
+                  <p className="text-amber-100/70">
+                    No winners yet. Press <span className="font-semibold text-amber-300">Draw</span> to begin.
                   </p>
                 </div>
               ) : (
