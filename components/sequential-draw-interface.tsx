@@ -311,8 +311,8 @@ export function SequentialDrawInterface({
         <div className="h-full">
           {currentCategory && !isEventComplete ? (
             <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl overflow-hidden">
-              <CardContent className="p-0">
-                <div className="relative">
+              <CardContent className="p-5">
+                <div className="relative overflow-hidden rounded-xl border border-amber-400/20 bg-white/[0.03]">
                   <img
                     src={currentCategory.image || "/placeholder.svg"}
                     alt={currentCategory.name}
@@ -323,7 +323,7 @@ export function SequentialDrawInterface({
                   />
                 </div>
 
-                <div className="space-y-4 p-5">
+                <div className="space-y-4 pt-4">
                   {nextPrizeInfo && !isCategoryComplete && (
                     <div className="grid grid-cols-3 gap-2">
                       <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
