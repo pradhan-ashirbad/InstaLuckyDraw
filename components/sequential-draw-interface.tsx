@@ -321,10 +321,6 @@ export function SequentialDrawInterface({
                       e.currentTarget.src = `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(currentCategory.name)}`
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/10" />
-                  <h2 className="absolute inset-x-4 bottom-4 z-10 text-center font-display text-xl font-bold leading-snug text-white">
-                    {currentCategory.name}
-                  </h2>
                 </div>
 
                 <div className="space-y-4 p-5">
@@ -358,6 +354,9 @@ export function SequentialDrawInterface({
                       }}
                     />
                   </div>
+                  <h2 className="text-center font-display text-xl font-bold leading-snug text-white">
+                    {currentCategory.name}
+                  </h2>
                 </div>
               </CardContent>
             </Card>
@@ -380,7 +379,7 @@ export function SequentialDrawInterface({
         </div>
 
         {/* Middle Column: Slot Machine Animation and Button */}
-        <div className="grid h-full grid-rows-[1fr_auto] items-stretch justify-center gap-6">
+        <div className="grid h-full grid-cols-1 grid-rows-[1fr_auto] items-stretch gap-6">
           {/* Cinematic Draw Stage */}
           <div className="relative flex min-h-0 items-center justify-center">
             {/* Ambient backglow — intensifies while drawing / on win */}
@@ -414,7 +413,7 @@ export function SequentialDrawInterface({
             )}
 
             {/* The glass stage */}
-            <div className="relative z-10 h-full w-full max-w-md overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-b from-white/[0.07] via-white/[0.02] to-black/50 backdrop-blur-xl shadow-[0_30px_80px_-22px_rgba(245,158,11,0.55)]">
+            <div className="relative z-10 h-full w-full max-w-3xl overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-b from-white/[0.07] via-white/[0.02] to-black/50 backdrop-blur-xl shadow-[0_30px_80px_-22px_rgba(245,158,11,0.55)]">
               {/* inner gold hairline */}
               <div className="pointer-events-none absolute inset-[3px] rounded-[1.7rem] ring-1 ring-amber-200/15" />
 
