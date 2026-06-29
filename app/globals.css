@@ -120,21 +120,6 @@ body {
   animation: winner-pop 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Expanding ring at the moment of reveal */
-@keyframes winner-ring {
-  0% {
-    transform: scale(0.35);
-    opacity: 0.85;
-  }
-  100% {
-    transform: scale(2.3);
-    opacity: 0;
-  }
-}
-.animate-winner-ring {
-  animation: winner-ring 1s ease-out forwards;
-}
-
 /* One-time light sheen sweeping across the winner name */
 @keyframes sheen {
   0% {
