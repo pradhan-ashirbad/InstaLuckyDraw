@@ -33,6 +33,7 @@ import { PrizeManagement } from "@/components/prize-management"
 import { SequentialDrawInterface } from "@/components/sequential-draw-interface"
 import { WinnersList } from "@/components/winners-list"
 import { ExportResults } from "@/components/export-results"
+import { backgroundThemes, defaultBackgroundThemeId, THEME_STORAGE_KEY } from "@/lib/background-themes"
 
 interface DealerData {
   "Customer Id"?: string
@@ -182,6 +183,24 @@ export default function CorporateLuckyDrawSystem() {
     drawingMusicUrl: "",
     winnerMusicUrl: "",
   })
+
+  /* ---------- Background Theme (persisted) ---------- */
+  const [backgroundThemeId, setBackgroundThemeId] = useState(defaultBackgroundThemeId)
+
+  useEffect(() => {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY)
+    if (saved && backgroundThemes.some((t) => t.id === saved)) {
+      setBackgroundThemeId(saved)
+    }
+  }, [])
+
+  const handleBackgroundThemeChange = useCallback((themeId: string) => {
+    setBackgroundThemeId(themeId)
+    localStorage.setItem(THEME_STORAGE_KEY, themeId)
+  }, [])
+
+  const activeBackgroundTheme =
+    backgroundThemes.find((t) => t.id === backgroundThemeId) ?? backgroundThemes[0]
 
   /* ---------- Mouse Movement Detection ---------- */
   useEffect(() => {
@@ -375,11 +394,13 @@ export default function CorporateLuckyDrawSystem() {
 
   /* =================== RENDER =================== */
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0b0705] text-white">
+    <div className={`relative min-h-screen overflow-hidden ${activeBackgroundTheme.baseBg} text-white`}>
       {/* ---------- Calm gala backdrop (static) ---------- */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         {/* Deep base wash */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#160d05] via-[#0c0704] to-black" />
+        <div
+          className={`absolute inset-0 bg-gradient-to-b ${activeBackgroundTheme.gradientFrom} ${activeBackgroundTheme.gradientVia} ${activeBackgroundTheme.gradientTo}`}
+        />
         {/* Single soft, static warm glow from above */}
         <div className="absolute -top-1/4 left-1/2 h-[70vh] w-[70vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(245,158,11,0.16),transparent_70%)] blur-3xl" />
         {/* Vignette */}
@@ -754,6 +775,8 @@ export default function CorporateLuckyDrawSystem() {
               onCategoriesChange={setPrizeCategories}
               audioSettings={audioSettings}
               onAudioSettingsChange={setAudioSettings}
+              backgroundThemeId={backgroundThemeId}
+              onBackgroundThemeChange={handleBackgroundThemeChange}
             />
           </TabsContent>
 

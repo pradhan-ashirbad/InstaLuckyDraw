@@ -34,7 +34,10 @@ import {
   Play,
   Pause,
   VolumeX,
+  Palette,
+  Check,
 } from "lucide-react"
+import { backgroundThemes } from "@/lib/background-themes"
 
 interface PrizeCategory {
   id: string
@@ -60,6 +63,8 @@ interface PrizeManagementProps {
   onCategoriesChange: (categories: PrizeCategory[]) => void
   audioSettings: AudioSettings
   onAudioSettingsChange: (settings: AudioSettings) => void
+  backgroundThemeId: string
+  onBackgroundThemeChange: (themeId: string) => void
 }
 
 const iconOptions = [
@@ -116,6 +121,8 @@ export function PrizeManagement({
   onCategoriesChange,
   audioSettings,
   onAudioSettingsChange,
+  backgroundThemeId,
+  onBackgroundThemeChange,
 }: PrizeManagementProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({
@@ -296,6 +303,43 @@ export function PrizeManagement({
 
   return (
     <div className="space-y-6">
+      {/* Background Theme Section */}
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Palette className="w-5 h-5" />
+            Background Theme
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {backgroundThemes.map((theme) => {
+              const isActive = theme.id === backgroundThemeId
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => onBackgroundThemeChange(theme.id)}
+                  className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                    isActive ? "border-amber-400 ring-2 ring-amber-400/40" : "border-slate-600 hover:border-slate-500"
+                  }`}
+                >
+                  <div className={`h-16 w-full ${theme.swatch}`} />
+                  <div className="bg-slate-900 px-2 py-1.5 text-xs font-medium text-white text-center">
+                    {theme.name}
+                  </div>
+                  {isActive && (
+                    <span className="absolute top-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-black">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Audio Settings Section */}
       <Card className="bg-slate-800 border-slate-700">
         <CardHeader>
