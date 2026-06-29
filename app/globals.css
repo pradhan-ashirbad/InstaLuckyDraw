@@ -98,16 +98,6 @@ body {
   animation: reel-thunk 0.28s cubic-bezier(0.2, 0.85, 0.25, 1);
 }
 
-/* Rotating spotlight rays behind the machine */
-@keyframes ray-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-ray {
-  animation: ray-spin 7s linear infinite;
-}
-
 /* Dramatic winner reveal */
 @keyframes winner-pop {
   0% {

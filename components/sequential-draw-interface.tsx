@@ -389,19 +389,6 @@ export function SequentialDrawInterface({
               }`}
             />
 
-            {/* Symmetric rotating sunburst while drawing — 16 evenly spaced rays */}
-            {isDrawing && (
-              <div
-                className="animate-ray absolute -inset-12 opacity-50"
-                style={{
-                  background:
-                    "repeating-conic-gradient(from 0deg, rgba(251,191,36,0.32) 0deg, rgba(251,191,36,0.32) 5deg, transparent 5deg, transparent 22.5deg)",
-                  WebkitMaskImage: "radial-gradient(circle, transparent 42%, #000 52%, #000 68%, transparent 82%)",
-                  maskImage: "radial-gradient(circle, transparent 42%, #000 52%, #000 68%, transparent 82%)",
-                }}
-              />
-            )}
-
             {/* Single soft ring on a fresh winner */}
             {currentWinner && !isDrawing && (
               <div
