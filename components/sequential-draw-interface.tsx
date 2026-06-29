@@ -389,6 +389,16 @@ export function SequentialDrawInterface({
               }`}
             />
 
+            {/* Expanding ring on a fresh winner */}
+            {currentWinner && !isDrawing && (
+              <div
+                key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`}
+                className="pointer-events-none absolute inset-0 z-20 grid place-items-center"
+              >
+                <div className="animate-winner-ring h-44 w-44 rounded-full border-2 border-amber-300/70" />
+              </div>
+            )}
+
             {/* The glass stage */}
             <div className="relative z-10 h-full w-full max-w-3xl overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-b from-[#1f140a] via-[#140d06] to-[#0b0705] backdrop-blur-xl shadow-[0_30px_80px_-22px_rgba(245,158,11,0.45)]">
               {/* inner gold hairline */}
@@ -417,7 +427,7 @@ export function SequentialDrawInterface({
                       <div ref={reelRef} className="will-change-transform [filter:blur(0.4px)]">
                         {reelLoop.map((name, i) => (
                           <div key={i} className="flex h-12 items-center justify-center px-3">
-                            <span className="font-display text-base font-semibold text-amber-50/90 truncate">
+                            <span className="font-display text-lg font-semibold text-amber-50/90 truncate">
                               {name}
                             </span>
                           </div>
@@ -431,37 +441,37 @@ export function SequentialDrawInterface({
                     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
                       <div className="animate-sheen absolute -inset-y-6 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent" />
                     </div>
-                    <div className="mb-3 flex justify-center">
+                    <div className="mb-4 flex justify-center">
                       <span className="relative grid place-items-center">
-                        <span className="absolute h-20 w-20 rounded-full bg-amber-400/30 blur-lg" />
-                        <Trophy className="relative h-14 w-14 text-amber-300 drop-shadow-[0_0_16px_rgba(251,191,36,0.9)]" />
+                        <span className="absolute h-24 w-24 rounded-full bg-amber-400/30 blur-lg" />
+                        <Trophy className="relative h-16 w-16 text-amber-300 drop-shadow-[0_0_16px_rgba(251,191,36,0.9)]" />
                       </span>
                     </div>
-                    <div className="mb-1.5 text-[0.62rem] uppercase tracking-[0.42em] text-white">Winner</div>
-                    <div className="font-display text-gold-gradient text-2xl font-bold leading-tight break-words">
+                    <div className="mb-2 text-xs uppercase tracking-[0.42em] text-white">Winner</div>
+                    <div className="font-display text-gold-gradient text-4xl font-bold leading-tight break-words">
                       {currentWinner.dealerName}
                     </div>
                     {currentWinner.district && (
-                      <div className="mt-1.5 text-xs text-amber-100/55">{currentWinner.district}</div>
+                      <div className="mt-2 text-base text-amber-100/55">{currentWinner.district}</div>
                     )}
                   </div>
                 ) : isCategoryComplete ? (
                   <div className="text-center">
-                    <CheckCircle className="mx-auto mb-3 h-14 w-14 text-emerald-400" />
-                    <div className="font-display text-lg font-bold tracking-wide text-emerald-300">CATEGORY COMPLETE</div>
+                    <CheckCircle className="mx-auto mb-3 h-20 w-20 text-emerald-400" />
+                    <div className="font-display text-2xl font-bold tracking-wide text-emerald-300">CATEGORY COMPLETE</div>
                   </div>
                 ) : isEventComplete ? (
                   <div className="text-center">
-                    <CheckCircle className="mx-auto mb-3 h-14 w-14 text-emerald-400" />
-                    <div className="font-display text-lg font-bold tracking-wide text-emerald-300">ALL DONE</div>
+                    <CheckCircle className="mx-auto mb-3 h-20 w-20 text-emerald-400" />
+                    <div className="font-display text-2xl font-bold tracking-wide text-emerald-300">ALL DONE</div>
                   </div>
                 ) : (
                   <div className="text-center">
-                    <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
-                      <Star className="h-7 w-7 text-amber-300" />
+                    <div className="mx-auto mb-4 grid h-24 w-24 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
+                      <Star className="h-10 w-10 text-amber-300" />
                     </div>
-                    <div className="font-display text-xl font-bold tracking-wide text-white">READY TO DRAW</div>
-                    <div className="mt-2 text-[0.62rem] uppercase tracking-[0.3em] text-amber-200/70">
+                    <div className="font-display text-3xl font-bold tracking-wide text-white">READY TO DRAW</div>
+                    <div className="mt-2 text-sm uppercase tracking-[0.3em] text-amber-200/70">
                       Press the button to begin
                     </div>
                   </div>
@@ -470,7 +480,7 @@ export function SequentialDrawInterface({
 
               {/* bottom caption while drawing */}
               {isDrawing && (
-                <div className="absolute inset-x-0 bottom-5 z-10 animate-pulse text-center text-[0.6rem] uppercase tracking-[0.3em] text-amber-300/90">
+                <div className="absolute inset-x-0 bottom-5 z-10 animate-pulse text-center text-sm uppercase tracking-[0.3em] text-amber-300/90">
                   Selecting Winner…
                 </div>
               )}
