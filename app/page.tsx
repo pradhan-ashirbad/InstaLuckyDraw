@@ -83,7 +83,7 @@ const corporatePrizes: PrizeCategory[] = [
     icon: <Smartphone className="w-6 h-6" />,
     winnerCount: 10,
     color: "bg-gradient-to-r from-purple-500 to-pink-500",
-    image: "https://images.samsung.com/is/image/samsung/p6pim/in/sm-a176bzkmins/gallery/in-galaxy-a17-5g-sm-a176-573626-sm-a176bzkmins-550420717?$624_468_PNG$",
+    image: "https://images.samsung.com/is/image/samsung/assets/in/A17_Gray_1600x864.jpg?imbypass=true",
     description: "Sixth Prize",
     order: 2,
   },
