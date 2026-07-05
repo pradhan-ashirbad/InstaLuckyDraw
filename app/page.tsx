@@ -33,7 +33,16 @@ import { PrizeManagement } from "@/components/prize-management"
 import { SequentialDrawInterface } from "@/components/sequential-draw-interface"
 import { WinnersList } from "@/components/winners-list"
 import { ExportResults } from "@/components/export-results"
-import { backgroundThemes, defaultBackgroundThemeId, THEME_STORAGE_KEY } from "@/lib/background-themes"
+import {
+  backgroundThemes,
+  defaultBackgroundThemeId,
+  THEME_STORAGE_KEY,
+  CUSTOM_THEME_ID,
+  CUSTOM_COLOR_STORAGE_KEY,
+  defaultCustomColor,
+  getStageTheme,
+  getOuterBackdropStyle,
+} from "@/lib/background-themes"
 
 interface DealerData {
   "Customer Id"?: string
@@ -189,7 +198,7 @@ export default function CorporateLuckyDrawSystem() {
 
   useEffect(() => {
     const saved = localStorage.getItem(THEME_STORAGE_KEY)
-    if (saved && backgroundThemes.some((t) => t.id === saved)) {
+    if (saved && (saved === CUSTOM_THEME_ID || backgroundThemes.some((t) => t.id === saved))) {
       setBackgroundThemeId(saved)
     }
   }, [])
@@ -199,8 +208,29 @@ export default function CorporateLuckyDrawSystem() {
     localStorage.setItem(THEME_STORAGE_KEY, themeId)
   }, [])
 
+  /* Custom color — one picker that tints both the page background and the stage */
+  const [customColor, setCustomColor] = useState(defaultCustomColor)
+
+  useEffect(() => {
+    const saved = localStorage.getItem(CUSTOM_COLOR_STORAGE_KEY)
+    if (saved) {
+      setCustomColor(saved)
+    }
+  }, [])
+
+  const handleCustomColorChange = useCallback((hex: string) => {
+    setCustomColor(hex)
+    localStorage.setItem(CUSTOM_COLOR_STORAGE_KEY, hex)
+    setBackgroundThemeId(CUSTOM_THEME_ID)
+    localStorage.setItem(THEME_STORAGE_KEY, CUSTOM_THEME_ID)
+  }, [])
+
+  const isCustomTheme = backgroundThemeId === CUSTOM_THEME_ID
   const activeBackgroundTheme =
     backgroundThemes.find((t) => t.id === backgroundThemeId) ?? backgroundThemes[0]
+  const accentHex = isCustomTheme ? customColor : activeBackgroundTheme.accent
+  const stageTheme = getStageTheme(accentHex)
+  const outerBackdropStyle = isCustomTheme ? getOuterBackdropStyle(customColor) : null
 
   /* ---------- Mouse Movement Detection ---------- */
   useEffect(() => {
@@ -394,15 +424,22 @@ export default function CorporateLuckyDrawSystem() {
 
   /* =================== RENDER =================== */
   return (
-    <div className={`relative min-h-screen overflow-hidden ${activeBackgroundTheme.baseBg} text-white`}>
+    <div
+      className={`relative min-h-screen overflow-hidden text-white ${isCustomTheme ? "" : activeBackgroundTheme.baseBg}`}
+      style={isCustomTheme && outerBackdropStyle ? { backgroundColor: outerBackdropStyle.backgroundColor } : undefined}
+    >
       {/* ---------- Calm gala backdrop (static) ---------- */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         {/* Deep base wash */}
         <div
-          className={`absolute inset-0 bg-gradient-to-b ${activeBackgroundTheme.gradientFrom} ${activeBackgroundTheme.gradientVia} ${activeBackgroundTheme.gradientTo}`}
+          className={isCustomTheme ? "absolute inset-0" : `absolute inset-0 bg-gradient-to-b ${activeBackgroundTheme.gradientFrom} ${activeBackgroundTheme.gradientVia} ${activeBackgroundTheme.gradientTo}`}
+          style={isCustomTheme && outerBackdropStyle ? { backgroundImage: outerBackdropStyle.backgroundImage } : undefined}
         />
-        {/* Single soft, static warm glow from above */}
-        <div className="absolute -top-1/4 left-1/2 h-[70vh] w-[70vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(245,158,11,0.16),transparent_70%)] blur-3xl" />
+        {/* Single soft, static glow from above, tinted by the active theme */}
+        <div
+          className="absolute -top-1/4 left-1/2 h-[70vh] w-[70vw] -translate-x-1/2 rounded-full blur-3xl"
+          style={{ backgroundImage: `radial-gradient(closest-side, rgba(${stageTheme.glowRgb},0.16), transparent 70%)` }}
+        />
         {/* Vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.7)_100%)]" />
       </div>
@@ -777,6 +814,8 @@ export default function CorporateLuckyDrawSystem() {
               onAudioSettingsChange={setAudioSettings}
               backgroundThemeId={backgroundThemeId}
               onBackgroundThemeChange={handleBackgroundThemeChange}
+              customColor={customColor}
+              onCustomColorChange={handleCustomColorChange}
             />
           </TabsContent>
 
@@ -806,6 +845,7 @@ export default function CorporateLuckyDrawSystem() {
                 getEligibleCoupons={getEligibleCoupons}
                 winners={winners}
                 onMoveToNextCategory={moveToNextCategory}
+                stageTheme={stageTheme}
               />
             )}
           </TabsContent>

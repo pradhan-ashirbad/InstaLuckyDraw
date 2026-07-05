@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX, Star } from "lucide-react"
+import type { StageTheme } from "@/lib/background-themes"
 
 interface PrizeCategory {
   id: string
@@ -41,6 +42,7 @@ interface SequentialDrawInterfaceProps {
   getEligibleCoupons: (categoryId: string) => any[]
   winners: Winner[]
   onMoveToNextCategory: () => void
+  stageTheme: StageTheme
 }
 
 export function SequentialDrawInterface({
@@ -57,6 +59,7 @@ export function SequentialDrawInterface({
   getEligibleCoupons,
   winners,
   onMoveToNextCategory,
+  stageTheme,
 }: SequentialDrawInterfaceProps) {
   // The reel pool plus the index that holds the actual winner to land on
   const [reelData, setReelData] = useState<{ names: string[]; targetPos: number }>({ names: [], targetPos: 0 })
@@ -384,9 +387,10 @@ export function SequentialDrawInterface({
           <div className="relative flex min-h-0 items-center justify-center">
             {/* Ambient backglow — intensifies while drawing / on win */}
             <div
-              className={`absolute -inset-10 rounded-full blur-3xl transition-all duration-700 ${
-                isDrawing ? "bg-amber-500/25" : currentWinner ? "bg-amber-400/20" : "bg-amber-500/10"
-              }`}
+              className="absolute -inset-10 rounded-full blur-3xl transition-all duration-700"
+              style={{
+                backgroundColor: `rgba(${stageTheme.glowRgb}, ${isDrawing ? 0.25 : currentWinner ? 0.2 : 0.1})`,
+              }}
             />
 
             {/* Expanding ring on a fresh winner */}
@@ -395,14 +399,27 @@ export function SequentialDrawInterface({
                 key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`}
                 className="pointer-events-none absolute inset-0 z-20 grid place-items-center"
               >
-                <div className="animate-winner-ring h-44 w-44 rounded-full border-2 border-amber-300/70" />
+                <div
+                  className="animate-winner-ring h-44 w-44 rounded-full border-2"
+                  style={{ borderColor: stageTheme.ringColor }}
+                />
               </div>
             )}
 
             {/* The glass stage */}
-            <div className="relative z-10 h-full w-full max-w-3xl overflow-hidden rounded-[2rem] border border-amber-300/30 bg-gradient-to-b from-[#1f140a] via-[#140d06] to-[#0b0705] backdrop-blur-xl shadow-[0_30px_80px_-22px_rgba(245,158,11,0.45)]">
-              {/* inner gold hairline */}
-              <div className="pointer-events-none absolute inset-[3px] rounded-[1.7rem] ring-1 ring-amber-200/15" />
+            <div
+              className="relative z-10 h-full w-full max-w-3xl overflow-hidden rounded-[2rem] border backdrop-blur-xl"
+              style={{
+                backgroundImage: stageTheme.background,
+                borderColor: stageTheme.borderColor,
+                boxShadow: `0 30px 80px -22px ${stageTheme.shadowColor}`,
+              }}
+            >
+              {/* inner hairline */}
+              <div
+                className="pointer-events-none absolute inset-[3px] rounded-[1.7rem]"
+                style={{ boxShadow: `inset 0 0 0 1px rgba(${stageTheme.glowRgb}, 0.15)` }}
+              />
 
               {/* single soft, evenly-fading glow — no hard edges or rings */}
               <div
@@ -410,8 +427,7 @@ export function SequentialDrawInterface({
                   isDrawing || currentWinner ? "opacity-100" : "opacity-60"
                 }`}
                 style={{
-                  background:
-                    "radial-gradient(85% 70% at 50% 32%, rgba(251,191,36,0.16), rgba(251,191,36,0.05) 45%, transparent 78%)",
+                  background: `radial-gradient(85% 70% at 50% 32%, rgba(${stageTheme.glowRgb},0.16), rgba(${stageTheme.glowRgb},0.05) 45%, transparent 78%)`,
                 }}
               />
 
@@ -420,7 +436,14 @@ export function SequentialDrawInterface({
                 {isDrawing ? (
                   <div className="relative h-44 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,#000_22%,#000_78%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_22%,#000_78%,transparent)]">
                     {/* focus window */}
-                    <div className="pointer-events-none absolute inset-x-1 top-1/2 z-20 h-12 -translate-y-1/2 rounded-lg border border-amber-300/55 bg-gradient-to-r from-amber-400/5 via-amber-300/15 to-amber-400/5 shadow-[0_0_30px_rgba(251,191,36,0.45)]" />
+                    <div
+                      className="pointer-events-none absolute inset-x-1 top-1/2 z-20 h-12 -translate-y-1/2 rounded-lg border"
+                      style={{
+                        borderColor: `rgba(${stageTheme.glowRgb}, 0.55)`,
+                        backgroundImage: `linear-gradient(to right, rgba(${stageTheme.glowRgb},0.05), rgba(${stageTheme.glowRgb},0.15), rgba(${stageTheme.glowRgb},0.05))`,
+                        boxShadow: `0 0 30px rgba(${stageTheme.glowRgb}, 0.45)`,
+                      }}
+                    />
                     {/* settle/thunk layer */}
                     <div ref={thunkRef} className="absolute inset-x-0 top-0">
                       {/* momentum reel */}

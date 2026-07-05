@@ -37,7 +37,7 @@ import {
   Palette,
   Check,
 } from "lucide-react"
-import { backgroundThemes } from "@/lib/background-themes"
+import { backgroundThemes, CUSTOM_THEME_ID } from "@/lib/background-themes"
 
 interface PrizeCategory {
   id: string
@@ -65,6 +65,8 @@ interface PrizeManagementProps {
   onAudioSettingsChange: (settings: AudioSettings) => void
   backgroundThemeId: string
   onBackgroundThemeChange: (themeId: string) => void
+  customColor: string
+  onCustomColorChange: (hex: string) => void
 }
 
 const iconOptions = [
@@ -123,6 +125,8 @@ export function PrizeManagement({
   onAudioSettingsChange,
   backgroundThemeId,
   onBackgroundThemeChange,
+  customColor,
+  onCustomColorChange,
 }: PrizeManagementProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({
@@ -336,6 +340,31 @@ export function PrizeManagement({
                 </button>
               )
             })}
+
+            {/* Custom color option — pick any color, applies to background & stage */}
+            <div
+              className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                backgroundThemeId === CUSTOM_THEME_ID
+                  ? "border-amber-400 ring-2 ring-amber-400/40"
+                  : "border-slate-600 hover:border-slate-500"
+              }`}
+            >
+              <div className="relative h-16 w-full" style={{ backgroundColor: customColor }}>
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => onCustomColorChange(e.target.value)}
+                  title="Pick a custom color"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+              </div>
+              <div className="bg-slate-900 px-2 py-1.5 text-xs font-medium text-white text-center">Custom</div>
+              {backgroundThemeId === CUSTOM_THEME_ID && (
+                <span className="absolute top-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-black">
+                  <Check className="h-3 w-3" />
+                </span>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
