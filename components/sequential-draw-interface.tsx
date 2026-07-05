@@ -289,6 +289,18 @@ export function SequentialDrawInterface({
     ? Array.from({ length: REEL_COPIES * reelData.names.length }, (_, i) => reelData.names[i % reelData.names.length])
     : []
 
+  // Once every prize has been drawn, replace the whole interface with a single
+  // clean congratulations screen — no stats, buttons, or lists.
+  if (isEventComplete) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center p-6 animate-float-up">
+        <h2 className="text-center font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-gold-gradient drop-shadow-[0_2px_18px_rgba(245,158,11,0.35)]">
+          Congratulations to All the Winners
+        </h2>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8 p-6">
       {/* Sound Control Button */}
@@ -312,7 +324,7 @@ export function SequentialDrawInterface({
       <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)_360px] gap-6 lg:gap-16 items-stretch">
         {/* Left Column: Current Prize Information */}
         <div className="h-full">
-          {currentCategory && !isEventComplete ? (
+          {currentCategory ? (
             <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl overflow-hidden">
               <CardContent className="p-5">
                 <div className="relative overflow-hidden rounded-xl border border-amber-400/20 bg-white/[0.03]">
@@ -361,14 +373,6 @@ export function SequentialDrawInterface({
                     {currentCategory.name}
                   </h2>
                 </div>
-              </CardContent>
-            </Card>
-          ) : isEventComplete ? (
-            <Card className="bg-black/40 border-orange-500/30 backdrop-blur-sm h-full">
-              <CardContent className="p-8 text-center flex flex-col justify-center">
-                <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                <div className="text-2xl font-bold text-green-400 mb-2">Event Complete!</div>
-                <div className="text-orange-200">All prizes have been drawn</div>
               </CardContent>
             </Card>
           ) : (
@@ -483,11 +487,6 @@ export function SequentialDrawInterface({
                     <CheckCircle className="mx-auto mb-3 h-20 w-20 text-emerald-400" />
                     <div className="font-display text-2xl font-bold tracking-wide text-emerald-300">CATEGORY COMPLETE</div>
                   </div>
-                ) : isEventComplete ? (
-                  <div className="text-center">
-                    <CheckCircle className="mx-auto mb-3 h-20 w-20 text-emerald-400" />
-                    <div className="font-display text-2xl font-bold tracking-wide text-emerald-300">ALL DONE</div>
-                  </div>
                 ) : (
                   <div className="text-center">
                     <div className="mx-auto mb-4 grid h-24 w-24 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
@@ -514,80 +513,44 @@ export function SequentialDrawInterface({
           </div>
 
           {/* Action Buttons */}
-          {!isEventComplete ? (
-            <div className="flex flex-col items-center space-y-4">
-              {/* Draw Button - Show when category is not complete */}
-              {!isCategoryComplete && (
-                <Button
-                  onClick={handlePerformDraw}
-                  disabled={!canDraw}
-                  className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
-                >
-                  {isDrawing ? (
-                    <>
-                      <Sparkles className="w-6 h-6 mr-3 animate-spin" />
-                      Drawing...
-                    </>
-                  ) : (
-                    <>
-                      <Trophy className="w-6 h-6 mr-3" />
-                      Draw Winner
-                    </>
-                  )}
-                </Button>
-              )}
+          <div className="flex flex-col items-center space-y-4">
+            {/* Draw Button - Show when category is not complete */}
+            {!isCategoryComplete && (
+              <Button
+                onClick={handlePerformDraw}
+                disabled={!canDraw}
+                className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
+              >
+                {isDrawing ? (
+                  <>
+                    <Sparkles className="w-6 h-6 mr-3 animate-spin" />
+                    Drawing...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="w-6 h-6 mr-3" />
+                    Draw Winner
+                  </>
+                )}
+              </Button>
+            )}
 
-              {/* Next Category Button - Show when category is complete */}
-              {isCategoryComplete && (
-                <Button
-                  onClick={handleMoveToNextCategory}
-                  className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
-                >
-                  <ChevronRight className="w-6 h-6 mr-3" />
-                  Next Category
-                </Button>
-              )}
+            {/* Next Category Button - Show when category is complete */}
+            {isCategoryComplete && (
+              <Button
+                onClick={handleMoveToNextCategory}
+                className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
+              >
+                <ChevronRight className="w-6 h-6 mr-3" />
+                Next Category
+              </Button>
+            )}
 
-              {/* Status Messages */}
-              {eligibleCount === 0 && currentCategory && !isCategoryComplete && (
-                <div className="text-center text-red-400 text-sm">No eligible coupons remaining</div>
-              )}
-            </div>
-          ) : (
-            /* Event Complete Message */
-            <div className="text-center space-y-6 animate-float-up">
-              <Card className="relative overflow-hidden bg-gradient-to-br from-[#1a0f06] via-black to-[#1a0f06] border-amber-300/50 w-full max-w-4xl rounded-2xl glow-gold">
-                <div className="pointer-events-none absolute -top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-amber-400/20 blur-3xl" />
-                <CardContent className="relative p-8 text-center">
-                  <div className="space-y-6">
-                    <div className="text-3xl animate-bounce">🏆 ✨ 🏆</div>
-                    <div className="font-display text-5xl font-extrabold text-gold-gradient">CONGRATULATIONS!</div>
-                    <div className="font-display text-2xl font-bold text-amber-100">All Prize Categories Complete!</div>
-                    <div className="bg-white/[0.05] border border-amber-400/20 rounded-xl p-6 space-y-3 backdrop-blur-sm">
-                      <div className="text-xl text-white">
-                        Total Winners: <span className="font-display font-bold text-amber-300">{winners.length}</span>
-                      </div>
-                      <div className="text-lg text-amber-100/80">Thank you to all our valued partners!</div>
-                      <div className="text-md text-amber-100/60">The Insta Fortune Fiesta has concluded successfully.</div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                      {prizeCategories.slice(0, 3).map((category, index) => {
-                        const categoryWinnerCount = winners.filter((w) => w.category === category.name).length
-                        return (
-                          <div key={category.id} className="bg-white/[0.04] border border-amber-400/15 rounded-lg p-3">
-                            <div className="text-sm font-bold text-amber-200">{category.name}</div>
-                            <div className="text-lg text-white">
-                              {categoryWinnerCount}/{category.winnerCount} Winners
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+            {/* Status Messages */}
+            {eligibleCount === 0 && currentCategory && !isCategoryComplete && (
+              <div className="text-center text-red-400 text-sm">No eligible coupons remaining</div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Winners List */}

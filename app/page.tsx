@@ -338,10 +338,16 @@ export default function CorporateLuckyDrawSystem() {
   }, [isDrawing, currentCategoryIndex, prizeCategories, getEligibleCoupons])
 
   const moveToNextCategory = useCallback(() => {
-    setCurrentCategoryIndex((i) => i + 1)
+    setCurrentCategoryIndex((i) => {
+      const next = i + 1
+      if (next >= prizeCategories.length) {
+        setIsEventComplete(true)
+      }
+      return next
+    })
     setCurrentCategoryWinnerIndex(0)
     setCurrentWinner(null)
-  }, [])
+  }, [prizeCategories.length])
 
   const resetSystem = useCallback(() => {
     setWinners([])
