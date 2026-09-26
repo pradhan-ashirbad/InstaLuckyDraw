@@ -78,21 +78,21 @@ interface Winner {
 const corporatePrizes: PrizeCategory[] = [
   {
     id: "bajaj-kitchen-combo",
-    name: "BAJAJ KITCHEN COMBO",
+    name: "MICROWAVE",
     icon: <Utensils className="w-6 h-6" />,
-    winnerCount: 25,
+    winnerCount: 14,
     color: "bg-gradient-to-r from-green-400 to-emerald-600",
-    image: "https://m.media-amazon.com/images/I/51OUmYcUalL._SL1200_.jpg",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0KWqkaphPLEHonwFYVhTDbN0Imk3yhvWcqXoW_QbGrg&s",
     description: "Seventh Prize",
     order: 1,
   },
   {
     id: "samsung-a17",
-    name: "SAMSUNG GALAXY A17",
+    name: "LAPTOP",
     icon: <Smartphone className="w-6 h-6" />,
-    winnerCount: 5,
+    winnerCount: 8,
     color: "bg-gradient-to-r from-purple-500 to-pink-500",
-    image: "https://images.samsung.com/is/image/samsung/assets/in/A17_Gray_1600x864.jpg?imbypass=true",
+    image: "https://img.magnific.com/free-photo/laptop-with-white-screen-isolated-white-wall_231208-8594.jpg?semt=ais_hybrid&w=740&q=80",
     description: "Sixth Prize",
     order: 2,
   },
@@ -100,33 +100,33 @@ const corporatePrizes: PrizeCategory[] = [
     id: "washing-machine",
     name: "DOUBLE DOOR REFRIGERATOR",
     icon: <WashingMachine className="w-6 h-6" />,
-    winnerCount: 4,
+    winnerCount: 3,
     color: "bg-gradient-to-r from-teal-400 to-emerald-500",
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZ34fqshCAvUXYrnzgqMRX9cql97FNKVQcEPhM3BGahw&s=10",
-    description: "Fifth Prize",
-    order: 3,
+    description: "Premium Prize",
+    order: 4,
   },
   {
     id: "split-ac-1-5",
-    name: "SPLIT AC 1.5 TON",
+    name: "ACTIVA",
     icon: <Wind className="w-6 h-6" />,
     winnerCount: 3,
     color: "bg-gradient-to-r from-cyan-400 to-blue-500",
     image:
-      "https://static.wixstatic.com/media/4af009_50b99ed648a4405980138b37e56d3abb~mv2.jpg/v1/fill/w_980,h_569,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/4af009_50b99ed648a4405980138b37e56d3abb~mv2.jpg",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXuiVahK3Y9Axm-0jo46jQ9nwd05H-NZEVUhW5QClOnA&s=10",
     description: "Fourth Prize",
-    order: 4,
+    order: 3,
   },
-  {
-    id: "smart-tv-55",
-    name: "LED 55 INCH SMART TELEVISION",
-    icon: <Tv className="w-6 h-6" />,
-    winnerCount: 2,
-    color: "bg-gradient-to-r from-indigo-500 to-purple-600",
-    image: "https://www.intex.in/cdn/shop/products/1_9b8014ad-124e-4742-a628-9a4c4affe617.jpg?v=1750330801",
-    description: "Third Prize",
-    order: 5,
-  },
+  // {
+  //   id: "smart-tv-55",
+  //   name: "LED 55 INCH SMART TELEVISION",
+  //   icon: <Tv className="w-6 h-6" />,
+  //   winnerCount: 2,
+  //   color: "bg-gradient-to-r from-indigo-500 to-purple-600",
+  //   image: "https://www.intex.in/cdn/shop/products/1_9b8014ad-124e-4742-a628-9a4c4affe617.jpg?v=1750330801",
+  //   description: "Third Prize",
+  //   order: 5,
+  // },
   // {
   //   id: "honda-dio",
   //   name: "HONDA SHINE SP",
@@ -138,17 +138,17 @@ const corporatePrizes: PrizeCategory[] = [
   //   description: "Second Prize",
   //   order: 6,
   // },
-  {
-    id: "honda-shine",
-    name: "HONDA SHINE SP",
-    icon: <Bike className="w-6 h-6" />,
-    winnerCount: 1,
-    color: "bg-gradient-to-r from-red-500 to-rose-700",
-    image:
-      "https://www.honda2wheelersindia.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fhondamotorc388f-hmsi8ece-prodb777-e813%2Fmedia%2FProject%2FHONDA2WI%2Fhonda2wheelersindia%2Fmotorcycle%2Fshine-125%2Faccessories%2Fshine125-accessories.png%3Fh%3D810%26iar%3D0%26w%3D1920&w=1920&q=75&dpl=dpl_7QAtHS8A71WM9kk3t5UaGA2pRwqm",
-    description: "First Prize",
-    order: 6,
-  },
+  // {
+  //   id: "honda-shine",
+  //   name: "HONDA SHINE SP",
+  //   icon: <Bike className="w-6 h-6" />,
+  //   winnerCount: 1,
+  //   color: "bg-gradient-to-r from-red-500 to-rose-700",
+  //   image:
+  //     "https://www.honda2wheelersindia.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fhondamotorc388f-hmsi8ece-prodb777-e813%2Fmedia%2FProject%2FHONDA2WI%2Fhonda2wheelersindia%2Fmotorcycle%2Fshine-125%2Faccessories%2Fshine125-accessories.png%3Fh%3D810%26iar%3D0%26w%3D1920&w=1920&q=75&dpl=dpl_7QAtHS8A71WM9kk3t5UaGA2pRwqm",
+  //   description: "First Prize",
+  //   order: 6,
+  // },
   {
     id: "honda-unicorn",
     name: "HONDA UNICORN",
@@ -157,8 +157,8 @@ const corporatePrizes: PrizeCategory[] = [
     color: "bg-gradient-to-r from-amber-400 to-orange-600",
     image:
       "https://www.honda2wheelersindia.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fhondamotorc388f-hmsi8ece-prodb777-e813%2Fmedia%2FProject%2FHONDA2WI%2Fhonda2wheelersindia%2Fmotorcycle%2FUnicorn%2Faccessories%2Funicorn-accessories.png%3Fh%3D810%26iar%3D0%26w%3D1920&w=1920&q=75&dpl=dpl_7QAtHS8A71WM9kk3t5UaGA2pRwqm",
-    description: "★ Mega Prize",
-    order: 7,
+    description: "Premium Prize",
+    order: 5,
   },
 ]
 
@@ -289,8 +289,8 @@ export default function CorporateLuckyDrawSystem() {
     (categoryId: string) => {
       const winnerSet = categoryWinners.get(categoryId) || new Set()
       let eligible = dealerData.filter((d) => !drawnCoupons.has(d["Coupon Number"]) && !winnerSet.has(d.Name))
-      // Mega prize keeps the "high engagement" gate: at least 7 total coupons
-      if (categoryId === "honda-unicorn") {
+      // Mega prize categories keep the "high engagement" gate (at least 3 total coupons)
+      if (categoryId === "honda-unicorn" || categoryId === "washing-machine") {
         eligible = eligible.filter((d) => (Number(d["Count of Total Coupons"]) || 0) >= 3)
       }
       return eligible
