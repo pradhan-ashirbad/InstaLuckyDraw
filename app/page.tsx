@@ -110,7 +110,7 @@ const corporatePrizes: PrizeCategory[] = [
     id: "split-ac-1-5",
     name: "ACTIVA",
     icon: <Wind className="w-6 h-6" />,
-    winnerCount: 3,
+    winnerCount: 5,
     color: "bg-gradient-to-r from-cyan-400 to-blue-500",
     image:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXuiVahK3Y9Axm-0jo46jQ9nwd05H-NZEVUhW5QClOnA&s=10",
