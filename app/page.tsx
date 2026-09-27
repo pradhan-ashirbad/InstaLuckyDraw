@@ -171,7 +171,7 @@ export default function CorporateLuckyDrawSystem() {
   )
   const [winners, setWinners] = useState<Winner[]>([])
   const [drawnCoupons, setDrawnCoupons] = useState<Set<string>>(new Set())
-  const [categoryWinners, setCategoryWinners] = useState<Map<string, Set<string>>>(new Map())
+  const [winningCustomers, setWinningCustomers] = useState<Set<string>>(new Set())
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0)
   const [currentCategoryWinnerIndex, setCurrentCategoryWinnerIndex] = useState(0)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -272,7 +272,7 @@ export default function CorporateLuckyDrawSystem() {
         // reset draw state
         setWinners([])
         setDrawnCoupons(new Set())
-        setCategoryWinners(new Map())
+        setWinningCustomers(new Set())
         setCurrentCategoryIndex(0)
         setCurrentCategoryWinnerIndex(0)
         setCurrentWinner(null)
@@ -287,15 +287,19 @@ export default function CorporateLuckyDrawSystem() {
   /* ---------- Helpers ---------- */
   const getEligibleCoupons = useCallback(
     (categoryId: string) => {
-      const winnerSet = categoryWinners.get(categoryId) || new Set()
-      let eligible = dealerData.filter((d) => !drawnCoupons.has(d["Coupon Number"]) && !winnerSet.has(d.Name))
+      let eligible = dealerData.filter((d) => {
+        const isCouponDrawn = drawnCoupons.has(d["Coupon Number"])
+        const customerKey = d["Customer Id"] ? String(d["Customer Id"]).trim() : String(d.Name).trim()
+        const hasCustomerWon = winningCustomers.has(customerKey) || winningCustomers.has(String(d.Name).trim())
+        return !isCouponDrawn && !hasCustomerWon
+      })
       // Mega prize categories keep the "high engagement" gate (at least 3 total coupons)
       if (categoryId === "honda-unicorn" || categoryId === "washing-machine") {
         eligible = eligible.filter((d) => (Number(d["Count of Total Coupons"]) || 0) >= 3)
       }
       return eligible
     },
-    [dealerData, drawnCoupons, categoryWinners],
+    [dealerData, drawnCoupons, winningCustomers],
   )
 
   /* ---------- Draw Logic ---------- */
@@ -325,12 +329,11 @@ export default function CorporateLuckyDrawSystem() {
 
     setWinners((w) => [...w, newWinner])
     setDrawnCoupons((s) => new Set(s).add(selected["Coupon Number"]))
-    setCategoryWinners((m) => {
-      const map = new Map(m)
-      const set = map.get(category.id) || new Set()
-      set.add(selected.Name)
-      map.set(category.id, set)
-      return map
+    setWinningCustomers((s) => {
+      const next = new Set(s)
+      if (selected["Customer Id"]) next.add(String(selected["Customer Id"]).trim())
+      if (selected.Name) next.add(String(selected.Name).trim())
+      return next
     })
     setCurrentWinner(newWinner)
     setIsDrawing(false)
@@ -352,7 +355,7 @@ export default function CorporateLuckyDrawSystem() {
   const resetSystem = useCallback(() => {
     setWinners([])
     setDrawnCoupons(new Set())
-    setCategoryWinners(new Map())
+    setWinningCustomers(new Set())
     setCurrentCategoryIndex(0)
     setCurrentCategoryWinnerIndex(0)
     setCurrentWinner(null)
