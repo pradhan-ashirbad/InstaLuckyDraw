@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" fill="none">
+  <defs><radialGradient id="glow"><stop stop-color="#E6CC92" stop-opacity=".14"/><stop offset="1" stop-color="#E6CC92" stop-opacity="0"/></radialGradient><linearGradient id="gold" x1="230" y1="140" x2="410" y2="290" gradientUnits="userSpaceOnUse"><stop stop-color="#F2DFB8"/><stop offset="1" stop-color="#B89A62"/></linearGradient></defs>
+  <path fill="#121A28" d="M0 0h640v420H0z"/><ellipse cx="320" cy="210" rx="240" ry="200" fill="url(#glow)"/><circle cx="320" cy="202" r="130" stroke="#E6CC92" stroke-opacity=".12"/><circle cx="320" cy="202" r="160" stroke="#E6CC92" stroke-opacity=".07" stroke-dasharray="3 8"/>
+  <g stroke="url(#gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M257 193h126v28H257zM266 221v69h108v-69M320 193v97M320 193c-28-4-49-13-49-31 0-24 39-23 49 31ZM320 193c28-4 49-13 49-31 0-24-39-23-49 31Z"/></g>
+  <path d="m210 130 3 8 8 3-8 3-3 8-3-8-8-3 8-3Zm215 128 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z" fill="#E6CC92" fill-opacity=".7"/>
+  <text x="320" y="340" text-anchor="middle" fill="#D6BF94" font-family="Georgia,serif" font-size="18">Something extraordinary awaits.</text>
+</svg>

@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { Trophy } from "lucide-react" // Import Trophy icon
+import type React from "react";
+import { Trophy } from "lucide-react"; // Import Trophy icon
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Slider } from "@/components/ui/slider"
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 import {
   Trash2,
   Plus,
@@ -36,37 +36,37 @@ import {
   VolumeX,
   Palette,
   Check,
-} from "lucide-react"
-import { backgroundThemes, CUSTOM_THEME_ID } from "@/lib/background-themes"
+} from "lucide-react";
+import { backgroundThemes, CUSTOM_THEME_ID } from "@/lib/background-themes";
 
 interface PrizeCategory {
-  id: string
-  name: string
-  icon: React.ReactNode
-  winnerCount: number
-  color: string
-  image: string
-  description: string
-  order: number
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  winnerCount: number;
+  color: string;
+  image: string;
+  description: string;
+  order: number;
 }
 
 interface AudioSettings {
-  drawingMusicEnabled: boolean
-  winnerMusicEnabled: boolean
-  volume: number
-  drawingMusicUrl: string
-  winnerMusicUrl: string
+  drawingMusicEnabled: boolean;
+  winnerMusicEnabled: boolean;
+  volume: number;
+  drawingMusicUrl: string;
+  winnerMusicUrl: string;
 }
 
 interface PrizeManagementProps {
-  categories: PrizeCategory[]
-  onCategoriesChange: (categories: PrizeCategory[]) => void
-  audioSettings: AudioSettings
-  onAudioSettingsChange: (settings: AudioSettings) => void
-  backgroundThemeId: string
-  onBackgroundThemeChange: (themeId: string) => void
-  customColor: string
-  onCustomColorChange: (hex: string) => void
+  categories: PrizeCategory[];
+  onCategoriesChange: (categories: PrizeCategory[]) => void;
+  audioSettings: AudioSettings;
+  onAudioSettingsChange: (settings: AudioSettings) => void;
+  backgroundThemeId: string;
+  onBackgroundThemeChange: (themeId: string) => void;
+  customColor: string;
+  onCustomColorChange: (hex: string) => void;
 }
 
 const iconOptions = [
@@ -74,26 +74,58 @@ const iconOptions = [
   { name: "Laptop", icon: <Laptop className="w-5 h-5" />, value: "Laptop" },
   { name: "Air Vent", icon: <AirVent className="w-5 h-5" />, value: "AirVent" },
   { name: "TV", icon: <Tv className="w-5 h-5" />, value: "Tv" },
-  { name: "Smartphone", icon: <Smartphone className="w-5 h-5" />, value: "Smartphone" },
+  {
+    name: "Smartphone",
+    icon: <Smartphone className="w-5 h-5" />,
+    value: "Smartphone",
+  },
   { name: "Wind", icon: <Wind className="w-5 h-5" />, value: "Wind" },
-  { name: "Headphones", icon: <Headphones className="w-5 h-5" />, value: "Headphones" },
+  {
+    name: "Headphones",
+    icon: <Headphones className="w-5 h-5" />,
+    value: "Headphones",
+  },
   { name: "Volume", icon: <Volume2 className="w-5 h-5" />, value: "Volume2" },
   { name: "Fan", icon: <Fan className="w-5 h-5" />, value: "Fan" },
   { name: "Gift", icon: <Gift className="w-5 h-5" />, value: "Gift" },
-]
+];
 
 const colorOptions = [
-  { name: "Yellow to Orange", value: "bg-gradient-to-r from-yellow-400 to-orange-500" },
-  { name: "Blue to Purple", value: "bg-gradient-to-r from-blue-500 to-purple-600" },
-  { name: "Gray to Black", value: "bg-gradient-to-r from-gray-700 to-gray-900" },
+  {
+    name: "Yellow to Orange",
+    value: "bg-gradient-to-r from-yellow-400 to-orange-500",
+  },
+  {
+    name: "Blue to Purple",
+    value: "bg-gradient-to-r from-blue-500 to-purple-600",
+  },
+  {
+    name: "Gray to Black",
+    value: "bg-gradient-to-r from-gray-700 to-gray-900",
+  },
   { name: "Cyan to Blue", value: "bg-gradient-to-r from-cyan-400 to-blue-500" },
-  { name: "Purple to Pink", value: "bg-gradient-to-r from-purple-500 to-pink-500" },
-  { name: "Green to Blue", value: "bg-gradient-to-r from-green-400 to-blue-500" },
-  { name: "Teal to Green", value: "bg-gradient-to-r from-teal-400 to-green-500" },
-  { name: "Indigo to Purple", value: "bg-gradient-to-r from-indigo-500 to-purple-600" },
+  {
+    name: "Purple to Pink",
+    value: "bg-gradient-to-r from-purple-500 to-pink-500",
+  },
+  {
+    name: "Green to Blue",
+    value: "bg-gradient-to-r from-green-400 to-blue-500",
+  },
+  {
+    name: "Teal to Green",
+    value: "bg-gradient-to-r from-teal-400 to-green-500",
+  },
+  {
+    name: "Indigo to Purple",
+    value: "bg-gradient-to-r from-indigo-500 to-purple-600",
+  },
   { name: "Pink to Red", value: "bg-gradient-to-r from-pink-500 to-red-500" },
-  { name: "Emerald to Teal", value: "bg-gradient-to-r from-emerald-400 to-teal-500" },
-]
+  {
+    name: "Emerald to Teal",
+    value: "bg-gradient-to-r from-emerald-400 to-teal-500",
+  },
+];
 
 const predefinedMusic = [
   {
@@ -116,7 +148,7 @@ const predefinedMusic = [
     url: "https://www.soundjay.com/misc/sounds/ta-da.mp3",
     type: "winner",
   },
-]
+];
 
 export function PrizeManagement({
   categories,
@@ -128,7 +160,7 @@ export function PrizeManagement({
   customColor,
   onCustomColorChange,
 }: PrizeManagementProps) {
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
     winnerCount: 1,
@@ -136,8 +168,8 @@ export function PrizeManagement({
     image: "",
     description: "",
     icon: "Gift",
-  })
-  const [isAdding, setIsAdding] = useState(false)
+  });
+  const [isAdding, setIsAdding] = useState(false);
   const [newCategory, setNewCategory] = useState({
     name: "",
     winnerCount: 1,
@@ -145,29 +177,36 @@ export function PrizeManagement({
     image: "",
     description: "",
     icon: "Gift",
-  })
-  const [testAudio, setTestAudio] = useState<HTMLAudioElement | null>(null)
-  const [isTestPlaying, setIsTestPlaying] = useState(false)
+  });
+  const [testAudio, setTestAudio] = useState<HTMLAudioElement | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(
+    () => () => {
+      previewAudioRef.current?.pause();
+    },
+    [],
+  );
+  const [isTestPlaying, setIsTestPlaying] = useState(false);
 
   const getIconComponent = (iconName: string) => {
-    const iconOption = iconOptions.find((opt) => opt.value === iconName)
-    return iconOption ? iconOption.icon : <Gift className="w-5 h-5" />
-  }
+    const iconOption = iconOptions.find((opt) => opt.value === iconName);
+    return iconOption ? iconOption.icon : <Gift className="w-5 h-5" />;
+  };
 
   const startEdit = (category: PrizeCategory) => {
-    setEditingId(category.id)
+    setEditingId(category.id);
     setEditForm({
       name: category.name,
       winnerCount: category.winnerCount,
       color: category.color,
       image: category.image,
       description: category.description,
-      icon: "Gift", // Default fallback
-    })
-  }
+      icon: "", // Preserve the current icon unless the host chooses another.
+    });
+  };
 
   const saveEdit = () => {
-    if (!editingId) return
+    if (!editingId || !editForm.name.trim()) return;
 
     const updatedCategories = categories.map((cat) =>
       cat.id === editingId
@@ -178,17 +217,17 @@ export function PrizeManagement({
             color: editForm.color,
             image: editForm.image,
             description: editForm.description,
-            icon: getIconComponent(editForm.icon),
+            icon: editForm.icon ? getIconComponent(editForm.icon) : cat.icon,
           }
         : cat,
-    )
+    );
 
-    onCategoriesChange(updatedCategories)
-    setEditingId(null)
-  }
+    onCategoriesChange(updatedCategories);
+    setEditingId(null);
+  };
 
   const cancelEdit = () => {
-    setEditingId(null)
+    setEditingId(null);
     setEditForm({
       name: "",
       winnerCount: 1,
@@ -196,52 +235,52 @@ export function PrizeManagement({
       image: "",
       description: "",
       icon: "Gift",
-    })
-  }
+    });
+  };
 
   const deleteCategory = (id: string) => {
-    const updatedCategories = categories.filter((cat) => cat.id !== id)
+    const updatedCategories = categories.filter((cat) => cat.id !== id);
     // Reorder remaining categories
     const reorderedCategories = updatedCategories.map((cat, index) => ({
       ...cat,
       order: index + 1,
-    }))
-    onCategoriesChange(reorderedCategories)
-  }
+    }));
+    onCategoriesChange(reorderedCategories);
+  };
 
   const moveCategory = (id: string, direction: "up" | "down") => {
-    const sortedCategories = [...categories].sort((a, b) => a.order - b.order)
-    const currentIndex = sortedCategories.findIndex((cat) => cat.id === id)
+    const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedCategories.findIndex((cat) => cat.id === id);
 
     if (
       (direction === "up" && currentIndex === 0) ||
       (direction === "down" && currentIndex === sortedCategories.length - 1)
     ) {
-      return
+      return;
     }
 
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
-    const updatedCategories = [...sortedCategories]
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    const updatedCategories = [...sortedCategories];
 
     // Swap positions
-    ;[updatedCategories[currentIndex], updatedCategories[newIndex]] = [
+    [updatedCategories[currentIndex], updatedCategories[newIndex]] = [
       updatedCategories[newIndex],
       updatedCategories[currentIndex],
-    ]
+    ];
 
     // Update order values
     const reorderedCategories = updatedCategories.map((cat, index) => ({
       ...cat,
       order: index + 1,
-    }))
+    }));
 
-    onCategoriesChange(reorderedCategories)
-  }
+    onCategoriesChange(reorderedCategories);
+  };
 
   const addCategory = () => {
-    if (!newCategory.name.trim()) return
+    if (!newCategory.name.trim()) return;
 
-    const maxOrder = Math.max(...categories.map((cat) => cat.order), 0)
+    const maxOrder = Math.max(...categories.map((cat) => cat.order), 0);
     const newCat: PrizeCategory = {
       id: `category-${Date.now()}`,
       name: newCategory.name,
@@ -251,9 +290,9 @@ export function PrizeManagement({
       image: newCategory.image,
       description: newCategory.description,
       order: maxOrder + 1,
-    }
+    };
 
-    onCategoriesChange([...categories, newCat])
+    onCategoriesChange([...categories, newCat]);
     setNewCategory({
       name: "",
       winnerCount: 1,
@@ -261,54 +300,57 @@ export function PrizeManagement({
       image: "",
       description: "",
       icon: "Gift",
-    })
-    setIsAdding(false)
-  }
+    });
+    setIsAdding(false);
+  };
 
   const testPlayAudio = (url: string) => {
     if (testAudio) {
-      testAudio.pause()
-      setTestAudio(null)
-      setIsTestPlaying(false)
+      testAudio.pause();
+      setTestAudio(null);
+      setIsTestPlaying(false);
     }
 
     if (url) {
-      const audio = new Audio(url)
-      audio.volume = audioSettings.volume / 100
+      const audio = new Audio(url);
+      previewAudioRef.current = audio;
+      audio.volume = audioSettings.volume / 100;
       audio.onended = () => {
-        setIsTestPlaying(false)
-        setTestAudio(null)
-      }
+        setIsTestPlaying(false);
+        setTestAudio(null);
+      };
       audio.onerror = () => {
-        alert("Error playing audio. Please check the URL.")
-        setIsTestPlaying(false)
-        setTestAudio(null)
-      }
+        alert("Error playing audio. Please check the URL.");
+        setIsTestPlaying(false);
+        setTestAudio(null);
+      };
 
-      setTestAudio(audio)
-      setIsTestPlaying(true)
+      setTestAudio(audio);
+      setIsTestPlaying(true);
       audio.play().catch(() => {
-        alert("Unable to play audio. Please check the URL or browser permissions.")
-        setIsTestPlaying(false)
-        setTestAudio(null)
-      })
+        alert(
+          "Unable to play audio. Please check the URL or browser permissions.",
+        );
+        setIsTestPlaying(false);
+        setTestAudio(null);
+      });
     }
-  }
+  };
 
   const stopTestAudio = () => {
     if (testAudio) {
-      testAudio.pause()
-      setTestAudio(null)
-      setIsTestPlaying(false)
+      testAudio.pause();
+      setTestAudio(null);
+      setIsTestPlaying(false);
     }
-  }
+  };
 
-  const sortedCategories = [...categories].sort((a, b) => a.order - b.order)
+  const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
 
   return (
     <div className="space-y-6">
       {/* Background Theme Section */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-[#111723] border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Palette className="w-5 h-5" />
@@ -318,18 +360,21 @@ export function PrizeManagement({
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {backgroundThemes.map((theme) => {
-              const isActive = theme.id === backgroundThemeId
+              const isActive = theme.id === backgroundThemeId;
               return (
                 <button
                   key={theme.id}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => onBackgroundThemeChange(theme.id)}
                   className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                    isActive ? "border-amber-400 ring-2 ring-amber-400/40" : "border-slate-600 hover:border-slate-500"
+                    isActive
+                      ? "border-amber-400 ring-2 ring-amber-400/40"
+                      : "border-white/15 hover:border-slate-500"
                   }`}
                 >
                   <div className={`h-16 w-full ${theme.swatch}`} />
-                  <div className="bg-slate-900 px-2 py-1.5 text-xs font-medium text-white text-center">
+                  <div className="bg-[#0c111b] px-2 py-1.5 text-xs font-medium text-white text-center">
                     {theme.name}
                   </div>
                   {isActive && (
@@ -338,7 +383,7 @@ export function PrizeManagement({
                     </span>
                   )}
                 </button>
-              )
+              );
             })}
 
             {/* Custom color option — pick any color, applies to background & stage */}
@@ -346,10 +391,13 @@ export function PrizeManagement({
               className={`relative rounded-lg overflow-hidden border-2 transition-all ${
                 backgroundThemeId === CUSTOM_THEME_ID
                   ? "border-amber-400 ring-2 ring-amber-400/40"
-                  : "border-slate-600 hover:border-slate-500"
+                  : "border-white/15 hover:border-slate-500"
               }`}
             >
-              <div className="relative h-16 w-full" style={{ backgroundColor: customColor }}>
+              <div
+                className="relative h-16 w-full"
+                style={{ backgroundColor: customColor }}
+              >
                 <input
                   type="color"
                   value={customColor}
@@ -358,7 +406,9 @@ export function PrizeManagement({
                   className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 />
               </div>
-              <div className="bg-slate-900 px-2 py-1.5 text-xs font-medium text-white text-center">Custom</div>
+              <div className="bg-[#0c111b] px-2 py-1.5 text-xs font-medium text-white text-center">
+                Custom
+              </div>
               {backgroundThemeId === CUSTOM_THEME_ID && (
                 <span className="absolute top-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-black">
                   <Check className="h-3 w-3" />
@@ -370,7 +420,7 @@ export function PrizeManagement({
       </Card>
 
       {/* Audio Settings Section */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-[#111723] border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Music className="w-5 h-5" />
@@ -391,12 +441,16 @@ export function PrizeManagement({
                 ) : (
                   <Volume2 className="w-4 h-4 text-white" />
                 )}
-                <span className="text-white text-sm w-12">{audioSettings.volume}%</span>
+                <span className="text-white text-sm w-12">
+                  {audioSettings.volume}%
+                </span>
               </div>
             </div>
             <Slider
               value={[audioSettings.volume]}
-              onValueChange={(value) => onAudioSettingsChange({ ...audioSettings, volume: value[0] })}
+              onValueChange={(value) =>
+                onAudioSettingsChange({ ...audioSettings, volume: value[0] })
+              }
               max={100}
               step={5}
               className="w-full"
@@ -404,7 +458,7 @@ export function PrizeManagement({
           </div>
 
           {/* Drawing Music Settings */}
-          <div className="space-y-4 p-4 border border-slate-600 rounded-lg">
+          <div className="space-y-4 p-4 border border-white/15 rounded-lg">
             <div className="flex items-center justify-between">
               <h4 className="text-white font-medium flex items-center gap-2">
                 <Headphones className="w-4 h-4" />
@@ -423,7 +477,10 @@ export function PrizeManagement({
                   }
                   className="rounded"
                 />
-                <Label htmlFor="drawing-music-enabled" className="text-white text-sm">
+                <Label
+                  htmlFor="drawing-music-enabled"
+                  className="text-white text-sm"
+                >
                   Enable
                 </Label>
               </div>
@@ -441,22 +498,28 @@ export function PrizeManagement({
                     })
                   }
                   placeholder="Enter music URL or select from presets"
-                  className="bg-slate-700 border-slate-600 text-white flex-1"
+                  className="bg-[#1b2331] border-white/15 text-white flex-1"
                 />
                 <Button
+                  aria-label="Preview drawing audio"
                   onClick={() => testPlayAudio(audioSettings.drawingMusicUrl)}
                   disabled={!audioSettings.drawingMusicUrl || isTestPlaying}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {isTestPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {isTestPlaying ? (
+                    <Pause className="w-4 h-4" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
                 </Button>
                 {isTestPlaying && (
                   <Button
                     onClick={stopTestAudio}
+                    aria-label="Stop audio preview"
                     size="sm"
                     variant="outline"
-                    className="border-slate-600 text-white bg-transparent"
+                    className="border-white/15 text-white bg-transparent"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -478,7 +541,7 @@ export function PrizeManagement({
                     }
                     variant="outline"
                     size="sm"
-                    className="border-slate-600 text-white hover:bg-slate-700 text-xs"
+                    className="border-white/15 text-white hover:bg-[#1b2331] text-xs"
                   >
                     {music.name}
                   </Button>
@@ -487,7 +550,7 @@ export function PrizeManagement({
           </div>
 
           {/* Winner Announcement Music Settings */}
-          <div className="space-y-4 p-4 border border-slate-600 rounded-lg">
+          <div className="space-y-4 p-4 border border-white/15 rounded-lg">
             <div className="flex items-center justify-between">
               <h4 className="text-white font-medium flex items-center gap-2">
                 <Trophy className="w-4 h-4" />
@@ -506,7 +569,10 @@ export function PrizeManagement({
                   }
                   className="rounded"
                 />
-                <Label htmlFor="winner-music-enabled" className="text-white text-sm">
+                <Label
+                  htmlFor="winner-music-enabled"
+                  className="text-white text-sm"
+                >
                   Enable
                 </Label>
               </div>
@@ -524,22 +590,28 @@ export function PrizeManagement({
                     })
                   }
                   placeholder="Enter music URL or select from presets"
-                  className="bg-slate-700 border-slate-600 text-white flex-1"
+                  className="bg-[#1b2331] border-white/15 text-white flex-1"
                 />
                 <Button
+                  aria-label="Preview winner audio"
                   onClick={() => testPlayAudio(audioSettings.winnerMusicUrl)}
                   disabled={!audioSettings.winnerMusicUrl || isTestPlaying}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {isTestPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {isTestPlaying ? (
+                    <Pause className="w-4 h-4" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
                 </Button>
                 {isTestPlaying && (
                   <Button
                     onClick={stopTestAudio}
+                    aria-label="Stop audio preview"
                     size="sm"
                     variant="outline"
-                    className="border-slate-600 text-white bg-transparent"
+                    className="border-white/15 text-white bg-transparent"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -561,7 +633,7 @@ export function PrizeManagement({
                     }
                     variant="outline"
                     size="sm"
-                    className="border-slate-600 text-white hover:bg-slate-700 text-xs"
+                    className="border-white/15 text-white hover:bg-[#1b2331] text-xs"
                   >
                     {music.name}
                   </Button>
@@ -570,50 +642,74 @@ export function PrizeManagement({
           </div>
 
           {/* Audio Instructions */}
-          <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4">
-            <h4 className="font-medium text-orange-200 mb-2 flex items-center gap-2">
+          <div className="bg-orange-900/20 border border-white/10 rounded-lg p-4">
+            <h4 className="font-medium text-slate-300 mb-2 flex items-center gap-2">
               <Music className="w-4 h-4" />
               Audio Setup Instructions:
             </h4>
-            <ul className="text-sm text-orange-300 space-y-1">
+            <ul className="text-sm text-slate-300 space-y-1">
               <li>
-                • <strong>Drawing Music</strong> - Plays during the spinning animation (3-4 seconds)
+                • <strong>Drawing Music</strong> - Plays during the spinning
+                animation (5.2 seconds)
               </li>
               <li>
-                • <strong>Winner Music</strong> - Plays when a winner is announced (2-3 seconds)
+                • <strong>Winner Music</strong> - Plays when a winner is
+                announced (2-3 seconds)
               </li>
-              <li>• Use short audio clips for best experience (under 10 seconds)</li>
+              <li>
+                • Use short audio clips for best experience (under 10 seconds)
+              </li>
               <li>• Supported formats: MP3, WAV, OGG</li>
-              <li>• Test audio before starting the draw to ensure proper playback</li>
-              <li>• Volume control affects all audio playback during the event</li>
+              <li>
+                • Test audio before starting the draw to ensure proper playback
+              </li>
+              <li>
+                • Volume control affects all audio playback during the event
+              </li>
             </ul>
           </div>
         </CardContent>
       </Card>
 
       {/* Prize Categories Management */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-[#111723] border-white/10">
         <CardHeader>
-          <CardTitle className="text-white">Prize Categories Management</CardTitle>
+          <CardTitle className="text-white">
+            Prize Categories Management
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {sortedCategories.map((category, index) => (
-            <div key={category.id} className="flex items-center justify-between p-4 border border-slate-600 rounded-lg">
+            <div
+              key={category.id}
+              className="management-row flex items-center justify-between gap-4 p-4 border border-white/15 rounded-lg"
+            >
               {editingId === category.id ? (
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div>
-                    <Label htmlFor={`name-${category.id}`} className="text-white">
+                    <Label
+                      htmlFor={`name-${category.id}`}
+                      className="text-white"
+                    >
                       Name
                     </Label>
                     <Input
                       id={`name-${category.id}`}
                       value={editForm.name}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      className="bg-[#1b2331] border-white/15 text-white"
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`count-${category.id}`} className="text-white">
+                    <Label
+                      htmlFor={`count-${category.id}`}
+                      className="text-white"
+                    >
                       Winners
                     </Label>
                     <Input
@@ -622,20 +718,34 @@ export function PrizeManagement({
                       min="1"
                       value={editForm.winnerCount}
                       onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, winnerCount: Number.parseInt(e.target.value) || 1 }))
+                        setEditForm((prev) => ({
+                          ...prev,
+                          winnerCount: Math.max(
+                            1,
+                            Number.parseInt(e.target.value) || 1,
+                          ),
+                        }))
                       }
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-[#1b2331] border-white/15 text-white"
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`color-${category.id}`} className="text-white">
+                    <Label
+                      htmlFor={`color-${category.id}`}
+                      className="text-white"
+                    >
                       Color
                     </Label>
                     <select
                       id={`color-${category.id}`}
                       value={editForm.color}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, color: e.target.value }))}
-                      className="w-full p-2 border rounded-md bg-slate-700 border-slate-600 text-white"
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          color: e.target.value,
+                        }))
+                      }
+                      className="w-full p-2 border rounded-md bg-[#1b2331] border-white/15 text-white"
                     >
                       {colorOptions.map((color) => (
                         <option key={color.value} value={color.value}>
@@ -645,15 +755,26 @@ export function PrizeManagement({
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor={`icon-${category.id}`} className="text-white">
+                    <Label
+                      htmlFor={`icon-${category.id}`}
+                      className="text-white"
+                    >
                       Icon
                     </Label>
                     <select
                       id={`icon-${category.id}`}
                       value={editForm.icon}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, icon: e.target.value }))}
-                      className="w-full p-2 border rounded-md bg-slate-700 border-slate-600 text-white"
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          icon: e.target.value,
+                        }))
+                      }
+                      className="w-full p-2 border rounded-md bg-[#1b2331] border-white/15 text-white"
                     >
+                      {!editForm.icon && (
+                        <option value="">Keep current icon</option>
+                      )}
                       {iconOptions.map((icon) => (
                         <option key={icon.value} value={icon.value}>
                           {icon.name}
@@ -662,90 +783,128 @@ export function PrizeManagement({
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor={`image-${category.id}`} className="text-white">
+                    <Label
+                      htmlFor={`image-${category.id}`}
+                      className="text-white"
+                    >
                       Image URL
                     </Label>
                     <Input
                       id={`image-${category.id}`}
                       value={editForm.image}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, image: e.target.value }))}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          image: e.target.value,
+                        }))
+                      }
+                      className="bg-[#1b2331] border-white/15 text-white"
                       placeholder="Image URL"
                     />
                   </div>
                   <div className="flex items-end gap-2">
-                    <Button onClick={saveEdit} size="sm" className="bg-green-600 hover:bg-green-700">
+                    <Button
+                      onClick={saveEdit}
+                      aria-label="Save prize"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
                       <Save className="w-4 h-4" />
                     </Button>
                     <Button
                       onClick={cancelEdit}
+                      aria-label="Cancel editing"
                       variant="outline"
                       size="sm"
-                      className="border-slate-600 text-white bg-transparent"
+                      className="border-white/15 text-white bg-transparent"
                     >
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
                   <div className="md:col-span-6">
-                    <Label htmlFor={`desc-${category.id}`} className="text-white">
+                    <Label
+                      htmlFor={`desc-${category.id}`}
+                      className="text-white"
+                    >
                       Description
                     </Label>
                     <Textarea
                       id={`desc-${category.id}`}
                       value={editForm.description}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      className="bg-[#1b2331] border-white/15 text-white"
                       rows={2}
                     />
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-4">
+                  <div className="prize-row-summary flex items-center gap-4 min-w-0">
                     <div className="flex flex-col items-center gap-1">
                       <Button
                         onClick={() => moveCategory(category.id, "up")}
+                        aria-label="Move prize up"
                         disabled={index === 0}
                         variant="ghost"
                         size="sm"
-                        className="text-white hover:bg-slate-700 p-1 h-auto"
+                        className="text-white hover:bg-[#1b2331] p-1 h-auto"
                       >
                         <ChevronUp className="w-4 h-4" />
                       </Button>
                       <GripVertical className="w-4 h-4 text-gray-500" />
                       <Button
                         onClick={() => moveCategory(category.id, "down")}
+                        aria-label="Move prize down"
                         disabled={index === sortedCategories.length - 1}
                         variant="ghost"
                         size="sm"
-                        className="text-white hover:bg-slate-700 p-1 h-auto"
+                        className="text-white hover:bg-[#1b2331] p-1 h-auto"
                       >
                         <ChevronDown className="w-4 h-4" />
                       </Button>
                     </div>
-                    <Badge variant="outline" className="text-white border-gray-500">
+                    <Badge
+                      variant="outline"
+                      className="text-white border-gray-500"
+                    >
                       #{category.order}
                     </Badge>
-                    <div className={`p-2 rounded-full ${category.color} text-white`}>{category.icon}</div>
+                    <div
+                      className={`p-2 rounded-full ${category.color} text-white`}
+                    >
+                      {category.icon}
+                    </div>
                     <div>
-                      <h4 className="font-medium text-white">{category.name}</h4>
-                      <p className="text-sm text-gray-400">{category.description}</p>
+                      <h4 className="font-medium text-white">
+                        {category.name}
+                      </h4>
                       <p className="text-sm text-gray-400">
-                        {category.winnerCount} winner{category.winnerCount > 1 ? "s" : ""}
+                        {category.description}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {category.winnerCount} winner
+                        {category.winnerCount > 1 ? "s" : ""}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="prize-actions flex items-center gap-2">
                     <Button
                       onClick={() => startEdit(category)}
+                      aria-label="Edit prize"
                       variant="outline"
                       size="sm"
-                      className="border-slate-600 text-white hover:bg-slate-700"
+                      className="border-white/15 text-white hover:bg-[#1b2331]"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
                     <Button
                       onClick={() => deleteCategory(category.id)}
+                      aria-label="Delete prize"
                       variant="outline"
                       size="sm"
                       className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
@@ -760,7 +919,7 @@ export function PrizeManagement({
 
           {/* Add New Category */}
           {isAdding ? (
-            <div className="p-4 border-2 border-dashed border-slate-600 rounded-lg">
+            <div className="p-4 border-2 border-dashed border-white/15 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                   <Label htmlFor="new-name" className="text-white">
@@ -769,9 +928,14 @@ export function PrizeManagement({
                   <Input
                     id="new-name"
                     value={newCategory.name}
-                    onChange={(e) => setNewCategory((prev) => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setNewCategory((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                     placeholder="Prize name"
-                    className="bg-slate-700 border-slate-600 text-white"
+                    className="bg-[#1b2331] border-white/15 text-white"
                   />
                 </div>
                 <div>
@@ -784,9 +948,15 @@ export function PrizeManagement({
                     min="1"
                     value={newCategory.winnerCount}
                     onChange={(e) =>
-                      setNewCategory((prev) => ({ ...prev, winnerCount: Number.parseInt(e.target.value) || 1 }))
+                      setNewCategory((prev) => ({
+                        ...prev,
+                        winnerCount: Math.max(
+                          1,
+                          Number.parseInt(e.target.value) || 1,
+                        ),
+                      }))
                     }
-                    className="bg-slate-700 border-slate-600 text-white"
+                    className="bg-[#1b2331] border-white/15 text-white"
                   />
                 </div>
                 <div>
@@ -796,8 +966,13 @@ export function PrizeManagement({
                   <select
                     id="new-color"
                     value={newCategory.color}
-                    onChange={(e) => setNewCategory((prev) => ({ ...prev, color: e.target.value }))}
-                    className="w-full p-2 border rounded-md bg-slate-700 border-slate-600 text-white"
+                    onChange={(e) =>
+                      setNewCategory((prev) => ({
+                        ...prev,
+                        color: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border rounded-md bg-[#1b2331] border-white/15 text-white"
                   >
                     {colorOptions.map((color) => (
                       <option key={color.value} value={color.value}>
@@ -813,8 +988,13 @@ export function PrizeManagement({
                   <select
                     id="new-icon"
                     value={newCategory.icon}
-                    onChange={(e) => setNewCategory((prev) => ({ ...prev, icon: e.target.value }))}
-                    className="w-full p-2 border rounded-md bg-slate-700 border-slate-600 text-white"
+                    onChange={(e) =>
+                      setNewCategory((prev) => ({
+                        ...prev,
+                        icon: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border rounded-md bg-[#1b2331] border-white/15 text-white"
                   >
                     {iconOptions.map((icon) => (
                       <option key={icon.value} value={icon.value}>
@@ -830,20 +1010,31 @@ export function PrizeManagement({
                   <Input
                     id="new-image"
                     value={newCategory.image}
-                    onChange={(e) => setNewCategory((prev) => ({ ...prev, image: e.target.value }))}
+                    onChange={(e) =>
+                      setNewCategory((prev) => ({
+                        ...prev,
+                        image: e.target.value,
+                      }))
+                    }
                     placeholder="Image URL"
-                    className="bg-slate-700 border-slate-600 text-white"
+                    className="bg-[#1b2331] border-white/15 text-white"
                   />
                 </div>
                 <div className="flex items-end gap-2">
-                  <Button onClick={addCategory} size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Button
+                    onClick={addCategory}
+                    aria-label="Save new prize"
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
                     <Save className="w-4 h-4" />
                   </Button>
                   <Button
                     onClick={() => setIsAdding(false)}
+                    aria-label="Cancel new prize"
                     variant="outline"
                     size="sm"
-                    className="border-slate-600 text-white"
+                    className="border-white/15 text-white"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -855,9 +1046,14 @@ export function PrizeManagement({
                   <Textarea
                     id="new-desc"
                     value={newCategory.description}
-                    onChange={(e) => setNewCategory((prev) => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setNewCategory((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     placeholder="Prize description"
-                    className="bg-slate-700 border-slate-600 text-white"
+                    className="bg-[#1b2331] border-white/15 text-white"
                     rows={2}
                   />
                 </div>
@@ -867,7 +1063,7 @@ export function PrizeManagement({
             <Button
               onClick={() => setIsAdding(true)}
               variant="outline"
-              className="w-full border-dashed border-slate-600 text-white hover:bg-slate-700"
+              className="w-full border-dashed border-white/15 text-white hover:bg-[#1b2331]"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add New Prize Category
@@ -876,5 +1072,5 @@ export function PrizeManagement({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

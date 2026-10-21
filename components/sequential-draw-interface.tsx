@@ -1,49 +1,86 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Sparkles, Trophy, RotateCcw, CheckCircle, ChevronRight, Volume2, VolumeX, Star } from "lucide-react"
-import type { StageTheme } from "@/lib/background-themes"
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Trophy,
+  RotateCcw,
+  ChevronRight,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Maximize2,
+  Minimize2,
+  Check,
+  Ticket,
+  ArrowUpRight,
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import type { StageTheme } from "@/lib/background-themes";
+import {
+  DRAW_DURATION_MS,
+  REEL_START_MS,
+  REEL_DURATION_MS,
+  ANTICIPATION_MS,
+} from "@/lib/draw-timing";
 
 interface PrizeCategory {
-  id: string
-  name: string
-  icon: React.ReactNode
-  winnerCount: number
-  color: string
-  image: string
-  description: string
-  order: number
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  winnerCount: number;
+  color: string;
+  image: string;
+  description: string;
+  order: number;
 }
-
 interface Winner {
-  couponId: string
-  dealerId?: string
-  dealerName: string
-  category: string
-  timestamp: Date
-  district?: string
+  couponId: string;
+  dealerId?: string;
+  dealerName: string;
+  category: string;
+  timestamp: Date;
+  district?: string;
+}
+interface AudioSettings {
+  drawingMusicEnabled: boolean;
+  winnerMusicEnabled: boolean;
+  volume: number;
+  drawingMusicUrl: string;
+  winnerMusicUrl: string;
+}
+interface SequentialDrawInterfaceProps {
+  prizeCategories: PrizeCategory[];
+  currentCategory: PrizeCategory | null;
+  currentCategoryWinnerIndex: number;
+  isDrawing: boolean;
+  currentWinner: Winner | null;
+  targetName?: string | null;
+  isEventComplete: boolean;
+  progress: { current: number; total: number; percentage: number };
+  onPerformDraw: () => void;
+  onResetSystem: () => void;
+  getEligibleCoupons: (categoryId: string) => { Name: string }[];
+  winners: Winner[];
+  onMoveToNextCategory: () => void;
+  onViewResults: () => void;
+  stageTheme: StageTheme;
+  audioSettings: AudioSettings;
 }
 
-interface SequentialDrawInterfaceProps {
-  prizeCategories: PrizeCategory[]
-  currentCategory: PrizeCategory | null
-  currentCategoryWinnerIndex: number
-  isDrawing: boolean
-  currentWinner: Winner | null
-  targetName?: string | null
-  isEventComplete: boolean
-  progress: { current: number; total: number; percentage: number }
-  onPerformDraw: () => void
-  onResetSystem: () => void
-  getEligibleCoupons: (categoryId: string) => any[]
-  winners: Winner[]
-  onMoveToNextCategory: () => void
-  stageTheme: StageTheme
-}
+const ROW_HEIGHT = 58;
+const VIEW_HEIGHT = 232;
+const COPIES = 5;
 
 export function SequentialDrawInterface({
   prizeCategories,
@@ -59,566 +96,658 @@ export function SequentialDrawInterface({
   getEligibleCoupons,
   winners,
   onMoveToNextCategory,
+  onViewResults,
   stageTheme,
+  audioSettings,
 }: SequentialDrawInterfaceProps) {
-  // The reel pool plus the index that holds the actual winner to land on
-  const [reelData, setReelData] = useState<{ names: string[]; targetPos: number }>({ names: [], targetPos: 0 })
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+  const [pool, setPool] = useState<{ names: string[]; target: number }>({
+    names: [],
+    target: 0,
+  });
+  const [phase, setPhase] = useState("preparing");
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundMessage, setSoundMessage] = useState("");
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [displayMessage, setDisplayMessage] = useState("");
+  const reelRef = useRef<HTMLDivElement>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const winnerAudioRef = useRef<HTMLAudioElement | null>(null);
+  const contextRef = useRef<AudioContext | null>(null);
 
-  // rAF-driven name reel that spins, decelerates and lands on the winner
-  const reelRef = useRef<HTMLDivElement>(null)
-  const thunkRef = useRef<HTMLDivElement>(null)
-  const reelRafRef = useRef<number | null>(null)
-  const ROW_H = 48
-  const VIEW_H = 176 // reel viewport height (matches h-44)
-  const REEL_COPIES = 6
-  
-  // Audio refs for different sound effects
-  const drawingSoundRef = useRef<HTMLAudioElement | null>(null)
-  const winnerSoundRef = useRef<HTMLAudioElement | null>(null)
-  const completeSoundRef = useRef<HTMLAudioElement | null>(null)
-  const buttonClickSoundRef = useRef<HTMLAudioElement | null>(null)
-
-  // Initialize audio objects
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Drawing sound - should be a looping slot machine/roulette sound
-      drawingSoundRef.current = new Audio('/sounds/kbc.mp3')
-      drawingSoundRef.current.loop = true
-      drawingSoundRef.current.volume = 0.6
-      
-      // Winner sound - celebration/victory sound
-      winnerSoundRef.current = new Audio('/public/sounds/winner-sound.mp3')
-      winnerSoundRef.current.volume = 0.8
-      
-      // Complete sound - event completion fanfare
-      completeSoundRef.current = new Audio('/sounds/complete-sound.mp3')
-      completeSoundRef.current.volume = 0.7
-      
-      // Button click sound - button press feedback
-      buttonClickSoundRef.current = new Audio('/sounds/button-click.mp3')
-      buttonClickSoundRef.current.volume = 0.4
-    }
-
-    // Cleanup function
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReducedMotion(media.matches);
+    const updateFullscreen = () => {
+      const active = Boolean(document.fullscreenElement);
+      setFullscreen(active);
+      document.documentElement.classList.toggle("event-fullscreen", active);
+    };
+    updateMotion();
+    media.addEventListener("change", updateMotion);
+    document.addEventListener("fullscreenchange", updateFullscreen);
     return () => {
-      if (drawingSoundRef.current) {
-        drawingSoundRef.current.pause()
-        drawingSoundRef.current = null
-      }
-      if (winnerSoundRef.current) {
-        winnerSoundRef.current.pause()
-        winnerSoundRef.current = null
-      }
-      if (completeSoundRef.current) {
-        completeSoundRef.current.pause()
-        completeSoundRef.current = null
-      }
-      if (buttonClickSoundRef.current) {
-        buttonClickSoundRef.current.pause()
-        buttonClickSoundRef.current = null
-      }
-    }
-  }, [])
+      media.removeEventListener("change", updateMotion);
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+      document.documentElement.classList.remove("event-fullscreen");
+      musicRef.current?.pause();
+      winnerAudioRef.current?.pause();
+      void contextRef.current?.close();
+    };
+  }, []);
 
-  // Handle drawing animation and sound
+  // Candidate names are a visual snapshot. Selection and eligibility stay in the parent.
   useEffect(() => {
-    if (isDrawing) {
-      // Snapshot real candidate names, guaranteeing the actual winner is in the
-      // pool so the reel can land on them. Remember where the winner sits.
-      if (currentCategory) {
-        const names = getEligibleCoupons(currentCategory.id)
-          .map((c: any) => c?.Name)
-          .filter((n: any): n is string => Boolean(n))
-        let pool = [...names].sort(() => Math.random() - 0.5).slice(0, 40)
-        if (pool.length === 0) pool = [targetName || "Selecting…"]
-        while (pool.length < 14) pool = [...pool, ...pool] // pad short pools for a full reel
-
-        // Ensure the winner appears exactly once at a known landing position
-        let targetPos = Math.floor(pool.length / 2)
-        if (targetName) {
-          const existing = pool.indexOf(targetName)
-          if (existing >= 0) targetPos = existing
-          else pool[targetPos] = targetName
-        }
-        setReelData({ names: pool, targetPos })
-      }
-
-      // Start drawing sound
-      if (isSoundEnabled && drawingSoundRef.current) {
-        drawingSoundRef.current.currentTime = 0
-        drawingSoundRef.current.play().catch(console.error)
-      }
-
-      return () => {
-        // Stop drawing sound when animation stops
-        if (drawingSoundRef.current) {
-          drawingSoundRef.current.pause()
-          drawingSoundRef.current.currentTime = 0
-        }
-      }
-    } else {
-      // Stop drawing sound when isDrawing becomes false
-      if (drawingSoundRef.current) {
-        drawingSoundRef.current.pause()
-        drawingSoundRef.current.currentTime = 0
-      }
+    if (!isDrawing || !currentCategory) return;
+    const names = getEligibleCoupons(currentCategory.id)
+      .map((c) => String(c.Name))
+      .filter(Boolean);
+    for (let i = names.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [names[i], names[j]] = [names[j], names[i]];
     }
-  }, [isDrawing, isSoundEnabled])
+    let visible = names.slice(0, 32);
+    if (!visible.length) visible = [targetName || "Selecting a winner"];
+    while (visible.length < 12) visible = [...visible, ...visible];
+    const target = Math.floor(visible.length / 2);
+    visible[target] = targetName || visible[target];
+    setPool({ names: visible, target });
+    setPhase("preparing");
+    const timers = [
+      setTimeout(() => setPhase("spinning"), REEL_START_MS),
+      setTimeout(() => setPhase("anticipation"), ANTICIPATION_MS),
+      setTimeout(() => setPhase("locked"), REEL_START_MS + REEL_DURATION_MS),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [isDrawing, currentCategory, targetName, getEligibleCoupons]);
 
-  // Drive the reel over a fixed timeline: fast spin, hard deceleration in the
-  // final ~1s, landing precisely on the winner's row with a "thunk" settle.
   useEffect(() => {
-    const N = reelData.names.length
-    if (!isDrawing || N === 0) return
-    const oneCopy = ROW_H * N
-    const SPIN_MS = 3600 // settles a touch before the parent's draw completes
-    const centerAdjust = ROW_H / 2 - VIEW_H / 2 // centers a row in the focus window
-
-    // Start within an early copy (rows exist above), land the winner row inside
-    // a late copy (rows exist below) so the window is never blank.
-    const startRow = Math.floor(Math.random() * N)
-    const startOffset = oneCopy + startRow * ROW_H + centerAdjust
-    const landIndex = (REEL_COPIES - 2) * N + reelData.targetPos
-    const finalOffset = landIndex * ROW_H + centerAdjust
-    const dist = finalOffset - startOffset
-
-    // easeOutQuint — near-linear early, very aggressive slowdown at the tail
-    const ease = (t: number) => 1 - Math.pow(1 - t, 5)
-
-    const start = performance.now()
-    let landed = false
-
+    if (!isDrawing || !pool.names.length || reducedMotion) return;
+    const startOffset =
+      pool.names.length * ROW_HEIGHT + (ROW_HEIGHT - VIEW_HEIGHT) / 2;
+    const finalOffset =
+      ((COPIES - 2) * pool.names.length + pool.target) * ROW_HEIGHT +
+      (ROW_HEIGHT - VIEW_HEIGHT) / 2;
+    const start = performance.now();
+    let frame = 0;
     const tick = (now: number) => {
-      const t = Math.min((now - start) / SPIN_MS, 1)
-      const offset = startOffset + dist * ease(t)
-      if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-offset}px, 0)`
-      if (t < 1) {
-        reelRafRef.current = requestAnimationFrame(tick)
-      } else if (!landed) {
-        landed = true
-        if (reelRef.current) reelRef.current.style.transform = `translate3d(0, ${-finalOffset}px, 0)`
-        if (thunkRef.current) {
-          thunkRef.current.classList.remove("animate-reel-thunk")
-          void thunkRef.current.offsetWidth // reflow so the bounce can replay
-          thunkRef.current.classList.add("animate-reel-thunk")
-        }
-      }
-    }
-    reelRafRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (reelRafRef.current) cancelAnimationFrame(reelRafRef.current)
-      if (thunkRef.current) thunkRef.current.classList.remove("animate-reel-thunk")
-    }
-  }, [isDrawing, reelData])
+      const t = Math.min(
+        1,
+        Math.max(0, (now - start - REEL_START_MS) / REEL_DURATION_MS),
+      );
+      const eased = 1 - Math.pow(1 - t, 3);
+      if (reelRef.current)
+        reelRef.current.style.transform = `translate3d(0, ${-(startOffset + (finalOffset - startOffset) * eased)}px, 0)`;
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [isDrawing, pool, reducedMotion]);
 
-  // Handle winner announcement sound
   useEffect(() => {
-    if (currentWinner && !isDrawing && isSoundEnabled) {
-      // Play winner sound when winner is announced
-      if (winnerSoundRef.current) {
-        winnerSoundRef.current.currentTime = 0
-        winnerSoundRef.current.play().catch(console.error)
-      }
-    }
-  }, [currentWinner, isDrawing, isSoundEnabled])
+    if (!isDrawing || !soundEnabled) musicRef.current?.pause();
+    if (!soundEnabled) winnerAudioRef.current?.pause();
+  }, [isDrawing, soundEnabled]);
 
-  // Handle event completion sound
   useEffect(() => {
-    if (isEventComplete && isSoundEnabled) {
-      // Play completion sound when event is complete
-      if (completeSoundRef.current) {
-        completeSoundRef.current.currentTime = 0
-        completeSoundRef.current.play().catch(console.error)
-      }
-    }
-  }, [isEventComplete, isSoundEnabled])
-
-  // Play button click sound
-  const playButtonSound = () => {
-    if (isSoundEnabled && buttonClickSoundRef.current) {
-      buttonClickSoundRef.current.currentTime = 0
-      buttonClickSoundRef.current.play().catch(console.error)
-    }
-  }
-
-  // Enhanced draw function with sound
-  const handlePerformDraw = () => {
-    playButtonSound()
-    onPerformDraw()
-  }
-
-  // Enhanced next category function with sound
-  const handleMoveToNextCategory = () => {
-    playButtonSound()
-    onMoveToNextCategory()
-  }
-
-  // Enhanced reset function with sound
-  const handleResetSystem = () => {
-    playButtonSound()
-    // Stop all sounds
-    if (drawingSoundRef.current) {
-      drawingSoundRef.current.pause()
-      drawingSoundRef.current.currentTime = 0
-    }
-    onResetSystem()
-  }
-
-  const getNextPrizeInfo = () => {
-    if (!currentCategory) return null
-    const remaining = currentCategory.winnerCount - currentCategoryWinnerIndex
-    return {
-      current: currentCategoryWinnerIndex + 1,
-      total: currentCategory.winnerCount,
-      remaining,
-    }
-  }
-
-  const nextPrizeInfo = getNextPrizeInfo()
-  const eligibleCount = currentCategory ? getEligibleCoupons(currentCategory.id).length : 0
-  const currentCategoryWinners = currentCategory
-    ? winners.filter((winner) => winner.category === currentCategory.name)
-    : []
-  const isCategoryComplete = currentCategory ? currentCategoryWinners.length >= currentCategory.winnerCount : false
-  const canDraw = !isDrawing && currentCategory && !isCategoryComplete && eligibleCount > 0
-
-  // Repeat the pool across several copies so the reel always has rows above and
-  // below the visible window throughout the spin (no blanks).
-  const reelLoop = reelData.names.length
-    ? Array.from({ length: REEL_COPIES * reelData.names.length }, (_, i) => reelData.names[i % reelData.names.length])
-    : []
-
-  // Once every prize has been drawn, replace the whole interface with a single
-  // clean congratulations screen — no stats, buttons, or lists.
-  if (isEventComplete) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center p-6 animate-float-up">
-        <h2 className="text-center font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-gold-gradient drop-shadow-[0_2px_18px_rgba(245,158,11,0.35)]">
-          Congratulations to All the Winners
-        </h2>
-      </div>
+    if (
+      !currentWinner ||
+      isDrawing ||
+      !soundEnabled ||
+      !audioSettings.winnerMusicEnabled ||
+      !audioSettings.volume
     )
-  }
+      return;
+    if (audioSettings.winnerMusicUrl) {
+      const audio = new Audio(audioSettings.winnerMusicUrl);
+      audio.volume = audioSettings.volume / 100;
+      winnerAudioRef.current = audio;
+      audio
+        .play()
+        .catch(() =>
+          setSoundMessage("Winner audio unavailable. The draw is unaffected."),
+        );
+      return () => audio.pause();
+    }
+    // A local three-note fanfare replaces the missing winner-sound.mp3 asset.
+    const context = contextRef.current;
+    if (context?.state === "running") {
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      const oscillators = notes.map((frequency, i) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const at = context.currentTime + i * 0.13;
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0, at);
+        gain.gain.linearRampToValueAtTime(
+          audioSettings.volume / 450,
+          at + 0.025,
+        );
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.8);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start(at);
+        oscillator.stop(at + 0.85);
+        return oscillator;
+      });
+      return () =>
+        oscillators.forEach((oscillator) => {
+          try {
+            oscillator.stop();
+          } catch {
+            /* Already stopped. */
+          }
+        });
+    }
+  }, [currentWinner, isDrawing, soundEnabled, audioSettings]);
+
+  const startDraw = () => {
+    if (!canDraw) return;
+    setSoundMessage("");
+    if (soundEnabled && audioSettings.volume > 0) {
+      try {
+        if (!contextRef.current && window.AudioContext)
+          contextRef.current = new AudioContext();
+        void contextRef.current
+          ?.resume()
+          .catch(() =>
+            setSoundMessage("Audio is unavailable. The draw is unaffected."),
+          );
+        if (audioSettings.drawingMusicEnabled) {
+          musicRef.current?.pause();
+          const audio = new Audio(
+            audioSettings.drawingMusicUrl || "/sounds/kbc.mp3",
+          );
+          audio.loop = true;
+          audio.volume = audioSettings.volume / 100;
+          musicRef.current = audio;
+          void audio
+            .play()
+            .catch(() =>
+              setSoundMessage(
+                "Drawing audio unavailable. The draw is unaffected.",
+              ),
+            );
+        }
+      } catch {
+        setSoundMessage("Audio is unavailable. The draw is unaffected.");
+      }
+    }
+    onPerformDraw();
+  };
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      setDisplayMessage("Full screen is unavailable in this browser.");
+    }
+  };
+  const categoryWinners = currentCategory
+    ? winners.filter((w) => w.category === currentCategory.name)
+    : [];
+  const categoryComplete = Boolean(
+    currentCategory && categoryWinners.length >= currentCategory.winnerCount,
+  );
+  const eligibleCount = currentCategory
+    ? getEligibleCoupons(currentCategory.id).length
+    : 0;
+  const canDraw =
+    !isDrawing &&
+    Boolean(currentCategory) &&
+    !categoryComplete &&
+    eligibleCount > 0;
+  const phaseLabel =
+    phase === "preparing"
+      ? "The stage is yours…"
+      : phase === "spinning"
+        ? "One ticket. One extraordinary moment."
+        : phase === "anticipation"
+          ? "Who will it be?"
+          : "And the winner is…";
+  const resetControl = (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" disabled={isDrawing} className="reset-button">
+          <RotateCcw /> Reset all draws
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogTitle>Start a new celebration?</AlertDialogTitle>
+        <AlertDialogDescription>
+          This clears all winners and draw progress. Participant data and prizes
+          are kept. Export your results first if you need a copy.
+        </AlertDialogDescription>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep results</AlertDialogCancel>
+          <AlertDialogAction onClick={onResetSystem}>
+            Reset all draws
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+  if (isEventComplete)
+    return (
+      <div className="event-complete">
+        <Confetti />
+        <span className="winner-medallion">
+          <Trophy />
+        </span>
+        <span className="eyebrow">Every moment, worth celebrating</span>
+        <h2>
+          Congratulations to
+          <br />
+          <em>all our winners.</em>
+        </h2>
+        <p>
+          {winners.length} extraordinary moments. One unforgettable celebration.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button className="gold-button" onClick={onViewResults}>
+            View & export results <ArrowUpRight />
+          </Button>
+          {resetControl}
+        </div>
+      </div>
+    );
 
   return (
-    <div className="space-y-8 p-6">
-      {/* Sound Control Button */}
-      {/* <div className="flex justify-end">
-        <Button
-          onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-          variant="outline"
-          size="sm"
-          className="border-orange-500 text-white hover:bg-orange-500/20 bg-transparent"
-        >
-          {isSoundEnabled ? (
-            <Volume2 className="w-4 h-4 mr-2" />
-          ) : (
-            <VolumeX className="w-4 h-4 mr-2" />
-          )}
-          {isSoundEnabled ? 'Sound On' : 'Sound Off'}
-        </Button>
-      </div> */}
-
-      {/* Main Draw Interface - Three Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)_360px] gap-6 lg:gap-16 items-stretch">
-        {/* Left Column: Current Prize Information */}
-        <div className="h-full">
-          {currentCategory ? (
-            <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl overflow-hidden">
-              <CardContent className="p-5">
-                <div className="relative overflow-hidden rounded-xl border border-amber-400/20 bg-white/[0.03]">
-                  <img
-                    src={currentCategory.image || "/placeholder.svg"}
-                    alt={currentCategory.name}
-                    className="w-full h-56 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(currentCategory.name)}`
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-4 pt-4">
-                  {nextPrizeInfo && !isCategoryComplete && (
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
-                        <div className="font-display text-lg font-bold text-white">
-                          {nextPrizeInfo.current} <span className="text-sm text-amber-200/60">of {nextPrizeInfo.total}</span>
-                        </div>
-                        <div className="mt-0.5 text-[0.58rem] uppercase tracking-[0.2em] text-amber-200/50">Current</div>
-                      </div>
-                      <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
-                        <div className="font-display text-lg font-bold text-white">{nextPrizeInfo.remaining}</div>
-                        <div className="mt-0.5 text-[0.58rem] uppercase tracking-[0.2em] text-amber-200/50">Remaining</div>
-                      </div>
-                      <div className="rounded-lg border border-amber-400/20 bg-white/[0.03] py-2.5 text-center">
-                        <div className="font-display text-lg font-bold text-white">{eligibleCount}</div>
-                        <div className="mt-0.5 text-[0.58rem] uppercase tracking-[0.2em] text-amber-200/50">Eligible</div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="h-1 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
-                      style={{
-                        width: `${
-                          currentCategory.winnerCount
-                            ? (currentCategoryWinners.length / currentCategory.winnerCount) * 100
-                            : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
-                  <h2 className="text-center font-display text-xl font-bold leading-snug text-white">
-                    {currentCategory.name}
-                  </h2>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-black/40 border-orange-500/30 backdrop-blur-sm h-full">
-              <CardContent className="p-8 text-center flex flex-col justify-center">
-                <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-                <div className="text-xl text-orange-200">Ready to Start</div>
-              </CardContent>
-            </Card>
-          )}
+    <div className="draw-experience">
+      <div className="section-heading draw-heading">
+        <div>
+          <span className="eyebrow">The main event</span>
+          <h2>Let fortune take the stage.</h2>
         </div>
-
-        {/* Middle Column: Slot Machine Animation and Button */}
-        <div className="grid h-full grid-cols-1 grid-rows-[1fr_auto] items-stretch gap-6">
-          {/* Cinematic Draw Stage */}
-          <div className="relative flex min-h-0 items-center justify-center">
-            {/* Ambient backglow — intensifies while drawing / on win */}
-            <div
-              className="absolute -inset-10 rounded-full blur-3xl transition-all duration-700"
-              style={{
-                backgroundColor: `rgba(${stageTheme.glowRgb}, ${isDrawing ? 0.25 : currentWinner ? 0.2 : 0.1})`,
-              }}
-            />
-
-            {/* Expanding ring on a fresh winner */}
-            {currentWinner && !isDrawing && (
+        <div className="stage-tools">
+          <Button
+            variant="outline"
+            aria-pressed={soundEnabled}
+            onClick={() => setSoundEnabled(!soundEnabled)}
+          >
+            {soundEnabled ? <Volume2 /> : <VolumeX />}
+            <span>Sound {soundEnabled ? "on" : "off"}</span>
+          </Button>
+          <Button variant="outline" onClick={toggleFullscreen}>
+            {fullscreen ? <Minimize2 /> : <Maximize2 />}
+            <span>{fullscreen ? "Exit full screen" : "Full screen"}</span>
+          </Button>
+        </div>
+      </div>
+      {(soundMessage || displayMessage) && (
+        <p role="status" className="stage-feedback">
+          {soundMessage || displayMessage}
+        </p>
+      )}
+      <div className="draw-grid">
+        <aside className="prize-spotlight">
+          <div className="panel-eyebrow">
+            <span className="status-dot" /> In the spotlight
+          </div>
+          {currentCategory ? (
+            <>
+              <div className="spotlight-image">
+                <img
+                  key={currentCategory.id}
+                  src={currentCategory.image || "/prize-placeholder.svg"}
+                  alt={currentCategory.name}
+                  onError={(e) => {
+                    if (!e.currentTarget.src.endsWith("/prize-placeholder.svg"))
+                      e.currentTarget.src = "/prize-placeholder.svg";
+                  }}
+                />
+                <span className="prize-ordinal">
+                  {String(
+                    prizeCategories.findIndex(
+                      (p) => p.id === currentCategory.id,
+                    ) + 1,
+                  ).padStart(2, "0")}
+                </span>
+              </div>
+              <div className="spotlight-copy">
+                <span className="eyebrow">{currentCategory.description}</span>
+                <h3>{currentCategory.name}</h3>
+                <p>
+                  {currentCategory.winnerCount}{" "}
+                  {currentCategory.winnerCount === 1
+                    ? "lucky winner"
+                    : "lucky winners"}
+                </p>
+              </div>
+              <div className="prize-stats">
+                <div>
+                  <strong>
+                    {categoryWinners.length}
+                    <small> / {currentCategory.winnerCount}</small>
+                  </strong>
+                  <span>Revealed</span>
+                </div>
+                <div>
+                  <strong>{eligibleCount.toLocaleString()}</strong>
+                  <span>Eligible tickets</span>
+                </div>
+              </div>
               <div
-                key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`}
-                className="pointer-events-none absolute inset-0 z-20 grid place-items-center"
+                className="prize-progress"
+                role="progressbar"
+                aria-label="Current prize progress"
+                aria-valuenow={categoryWinners.length}
+                aria-valuemin={0}
+                aria-valuemax={currentCategory.winnerCount}
               >
-                <div
-                  className="animate-winner-ring h-44 w-44 rounded-full border-2"
-                  style={{ borderColor: stageTheme.ringColor }}
+                <span
+                  style={{
+                    width: `${Math.min(100, (categoryWinners.length / currentCategory.winnerCount) * 100)}%`,
+                  }}
                 />
               </div>
-            )}
-
-            {/* The glass stage */}
-            <div
-              className="relative z-10 h-full w-full max-w-3xl overflow-hidden rounded-[2rem] border backdrop-blur-xl"
-              style={{
-                backgroundImage: stageTheme.background,
-                borderColor: stageTheme.borderColor,
-                boxShadow: `0 30px 80px -22px ${stageTheme.shadowColor}`,
-              }}
-            >
-              {/* inner hairline */}
-              <div
-                className="pointer-events-none absolute inset-[3px] rounded-[1.7rem]"
-                style={{ boxShadow: `inset 0 0 0 1px rgba(${stageTheme.glowRgb}, 0.15)` }}
-              />
-
-              {/* single soft, evenly-fading glow — no hard edges or rings */}
-              <div
-                className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${
-                  isDrawing || currentWinner ? "opacity-100" : "opacity-60"
-                }`}
-                style={{
-                  background: `radial-gradient(85% 70% at 50% 32%, rgba(${stageTheme.glowRgb},0.16), rgba(${stageTheme.glowRgb},0.05) 45%, transparent 78%)`,
-                }}
-              />
-
-              {/* center stage content */}
-              <div className="absolute inset-x-5 top-1/2 z-10 -translate-y-1/2">
-                {isDrawing ? (
-                  <div className="relative h-44 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,#000_22%,#000_78%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_22%,#000_78%,transparent)]">
-                    {/* focus window */}
-                    <div
-                      className="pointer-events-none absolute inset-x-1 top-1/2 z-20 h-12 -translate-y-1/2 rounded-lg border"
-                      style={{
-                        borderColor: `rgba(${stageTheme.glowRgb}, 0.55)`,
-                        backgroundImage: `linear-gradient(to right, rgba(${stageTheme.glowRgb},0.05), rgba(${stageTheme.glowRgb},0.15), rgba(${stageTheme.glowRgb},0.05))`,
-                        boxShadow: `0 0 30px rgba(${stageTheme.glowRgb}, 0.45)`,
-                      }}
-                    />
-                    {/* settle/thunk layer */}
-                    <div ref={thunkRef} className="absolute inset-x-0 top-0">
-                      {/* momentum reel */}
-                      <div ref={reelRef} className="will-change-transform [filter:blur(0.4px)]">
-                        {reelLoop.map((name, i) => (
-                          <div key={i} className="flex h-12 items-center justify-center px-3">
-                            <span className="font-display text-lg font-semibold text-amber-50/90 truncate">
-                              {name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : currentWinner ? (
-                  <div className="animate-winner-pop relative text-center">
-                    {/* sheen sweep */}
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
-                      <div className="animate-sheen absolute -inset-y-6 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent" />
-                    </div>
-                    <div className="mb-4 flex justify-center">
-                      <span className="relative grid place-items-center">
-                        <span className="absolute h-24 w-24 rounded-full bg-amber-400/30 blur-lg" />
-                        <Trophy className="relative h-16 w-16 text-amber-300 drop-shadow-[0_0_16px_rgba(251,191,36,0.9)]" />
-                      </span>
-                    </div>
-                    <div className="mb-2 text-xs uppercase tracking-[0.42em] text-white">Winner</div>
-                    <div className="font-display text-gold-gradient text-4xl font-bold leading-tight break-words">
-                      {currentWinner.dealerName}
-                    </div>
-                    {currentWinner.district && (
-                      <div className="mt-2 text-base text-amber-100/55">{currentWinner.district}</div>
-                    )}
-                  </div>
-                ) : isCategoryComplete ? (
-                  <div className="text-center">
-                    <CheckCircle className="mx-auto mb-3 h-20 w-20 text-emerald-400" />
-                    <div className="font-display text-2xl font-bold tracking-wide text-emerald-300">CATEGORY COMPLETE</div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 grid h-24 w-24 place-items-center rounded-full border border-amber-400/40 bg-amber-400/10 glow-gold">
-                      <Star className="h-10 w-10 text-amber-300" />
-                    </div>
-                    <div className="font-display text-3xl font-bold tracking-wide text-white">READY TO DRAW</div>
-                    <div className="mt-2 text-sm uppercase tracking-[0.3em] text-amber-200/70">
-                      Press the button to begin
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* bottom caption while drawing */}
-              {isDrawing && (
-                <div className="absolute inset-x-0 bottom-5 z-10 animate-pulse text-center text-sm uppercase tracking-[0.3em] text-amber-300/90">
-                  Selecting Winner…
-                </div>
-              )}
-
-              {/* vignette */}
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.6))]" />
+            </>
+          ) : (
+            <div className="p-8 text-center">
+              <Trophy className="mx-auto mb-4" />
+              <h3>No prize categories</h3>
+              <p>Add a prize in Manage Prizes to begin.</p>
             </div>
-          </div>
+          )}
+        </aside>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col items-center space-y-4">
-            {/* Draw Button - Show when category is not complete */}
-            {!isCategoryComplete && (
+        <section
+          className={`live-stage ${isDrawing ? "is-drawing" : currentWinner ? "has-winner" : ""} phase-${phase}`}
+          aria-label="Lucky draw stage"
+          aria-busy={isDrawing}
+          style={
+            {
+              "--event-glow": stageTheme.glowRgb,
+              "--draw-duration": `${DRAW_DURATION_MS}ms`,
+            } as React.CSSProperties
+          }
+        >
+          <div className="stage-topline">
+            <span>
+              <span className={`status-dot ${isDrawing ? "is-live" : ""}`} />{" "}
+              {isDrawing
+                ? "DRAWING LIVE"
+                : currentWinner
+                  ? "A MOMENT TO REMEMBER"
+                  : "YOUR MOMENT AWAITS"}
+            </span>
+            <span>
+              {currentCategory
+                ? `${Math.min(currentCategoryWinnerIndex + (isDrawing || !currentWinner ? 1 : 0), currentCategory.winnerCount)} / ${currentCategory.winnerCount}`
+                : "—"}
+            </span>
+          </div>
+          <div className="stage-atmosphere" aria-hidden="true">
+            <div className="stage-orbit orbit-one" />
+            <div className="stage-orbit orbit-two" />
+            <div className="stage-orbit orbit-three" />
+            <div className="stage-beam beam-left" />
+            <div className="stage-beam beam-right" />
+          </div>
+          <div className="stage-body">
+            {isDrawing ? (
+              <div className="spin-scene">
+                <span className="eyebrow anticipation-label" role="status">
+                  {phaseLabel}
+                </span>
+                {reducedMotion ? (
+                  <div className="reduced-selection">
+                    <Ticket />
+                    <p>Selecting your next winner…</p>
+                    <small>The result will appear in a moment.</small>
+                  </div>
+                ) : (
+                  <div className="name-reel" aria-hidden="true">
+                    <div className="reel-focus">
+                      <span>›</span>
+                      <span>‹</span>
+                    </div>
+                    <div className="reel-track" ref={reelRef}>
+                      {Array.from(
+                        { length: pool.names.length * COPIES },
+                        (_, i) => (
+                          <div className="reel-row" key={i}>
+                            {pool.names[i % pool.names.length]}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="draw-timer" aria-hidden="true">
+                  <span />
+                </div>
+                <p className="spin-caption">
+                  A little anticipation. A lot to celebrate.
+                </p>
+              </div>
+            ) : currentWinner ? (
+              <div
+                key={`${currentWinner.couponId}-${currentWinner.timestamp.getTime()}`}
+                className="winner-scene"
+              >
+                <Confetti />
+                <span className="reveal-ring" aria-hidden="true" />
+                <span className="winner-medallion">
+                  <Trophy />
+                </span>
+                <span className="eyebrow">The spotlight is yours</span>
+                <div role="status" aria-live="polite" aria-atomic="true">
+                  <p className="winner-congratulations">Congratulations,</p>
+                  <h3 className="winner-name">{currentWinner.dealerName}</h3>
+                  <p className="winner-district">
+                    {[
+                      currentWinner.district,
+                      currentWinner.dealerId &&
+                        `Dealer ${currentWinner.dealerId}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <div className="winner-ticket">
+                    <Ticket /> Winning coupon{" "}
+                    <strong>{currentWinner.couponId}</strong>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="ready-scene">
+                <span className="ready-medallion">
+                  <Trophy />
+                </span>
+                <span className="eyebrow">
+                  Big rewards. Real possibilities.
+                </span>
+                <h3>
+                  Who’s next
+                  <br />
+                  in the spotlight?
+                </h3>
+                <p>
+                  {canDraw
+                    ? "One click could make their day."
+                    : "Your next celebration is just a ticket away."}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="stage-action">
+            {categoryComplete ? (
               <Button
-                onClick={handlePerformDraw}
+                className="gold-button draw-button"
+                onClick={onMoveToNextCategory}
+              >
+                {currentCategory?.id ===
+                prizeCategories[prizeCategories.length - 1]?.id
+                  ? "Complete event"
+                  : "Next category"}
+                <ChevronRight />
+              </Button>
+            ) : (
+              <Button
+                className="gold-button draw-button"
                 disabled={!canDraw}
-                className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
+                onClick={startDraw}
               >
                 {isDrawing ? (
                   <>
-                    <Sparkles className="w-6 h-6 mr-3 animate-spin" />
-                    Drawing...
+                    <Sparkles className="drawing-icon" /> The excitement is
+                    building…
                   </>
                 ) : (
                   <>
-                    <Trophy className="w-6 h-6 mr-3" />
-                    Draw Winner
+                    <Trophy />
+                    {currentWinner ? "Draw next winner" : "Draw winner"}
+                    <ArrowUpRight />
                   </>
                 )}
               </Button>
             )}
+            <p>
+              {isDrawing
+                ? "Please stay on this screen until the reveal."
+                : categoryComplete
+                  ? "All winners in this category have been revealed."
+                  : eligibleCount === 0
+                    ? "No eligible coupons remain for this prize. Check participant data or reset the draws."
+                    : "Every eligible ticket has a chance. Every winner is unique."}
+            </p>
+          </div>
+        </section>
 
-            {/* Next Category Button - Show when category is complete */}
-            {isCategoryComplete && (
-              <Button
-                onClick={handleMoveToNextCategory}
-                className="px-8 py-4 text-xl font-display font-bold tracking-wide bg-gradient-to-r from-amber-300 via-amber-400 to-orange-600 hover:from-amber-200 hover:to-orange-500 text-black rounded-full shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 w-full max-w-xs border-2 border-amber-200"
-              >
-                <ChevronRight className="w-6 h-6 mr-3" />
-                Next Category
-              </Button>
-            )}
-
-            {/* Status Messages */}
-            {eligibleCount === 0 && currentCategory && !isCategoryComplete && (
-              <div className="text-center text-red-400 text-sm">No eligible coupons remaining</div>
+        <aside className="winners-panel">
+          <div className="winners-panel-header">
+            <div>
+              <span className="eyebrow">The lucky ones</span>
+              <h3>Winner’s circle</h3>
+            </div>
+            <span className="count-badge">{categoryWinners.length}</span>
+          </div>
+          <div className="winner-feed" aria-label="Winners for this category">
+            {!categoryWinners.length ? (
+              <div className="winner-feed-empty">
+                <span>
+                  <Trophy />
+                </span>
+                <h4>
+                  The first of many
+                  <br />
+                  happy moments.
+                </h4>
+                <p>
+                  Your winners will appear here
+                  <br />
+                  as the celebration unfolds.
+                </p>
+              </div>
+            ) : (
+              categoryWinners
+                .slice()
+                .reverse()
+                .map((winner, i) => (
+                  <div
+                    key={`${winner.couponId}-${winner.timestamp.getTime()}`}
+                    className={`winner-feed-row ${i === 0 ? "latest" : ""}`}
+                  >
+                    <span className="winner-rank">
+                      {i === 0 ? (
+                        <Trophy />
+                      ) : (
+                        String(categoryWinners.length - i).padStart(2, "0")
+                      )}
+                    </span>
+                    <div>
+                      <strong>{winner.dealerName}</strong>
+                      <span>{winner.district || "Lucky winner"}</span>
+                      <small>Coupon {winner.couponId}</small>
+                    </div>
+                    {i === 0 && <span className="new-winner">NEW</span>}
+                  </div>
+                ))
             )}
           </div>
+          <div className="winner-feed-footer">
+            <Check /> One win per participant
+          </div>
+        </aside>
+      </div>
+      <div className="event-lineup">
+        <div className="lineup-heading">
+          <span className="eyebrow">The evening’s journey</span>
+          <span>
+            {progress.current} of {progress.total} winners revealed
+          </span>
         </div>
-
-        {/* Right Column: Winners List */}
-        <div className="space-y-4">
-          <Card className="bg-white/[0.04] border-amber-400/25 backdrop-blur-md h-full rounded-2xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-display text-amber-100">
-                <Star className="w-5 h-5 text-amber-300" />
-                {currentCategory ? currentCategory.name : "Winners List"} ({currentCategoryWinners.length}/
-                {currentCategory?.winnerCount || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-80 overflow-y-auto">
-              {currentCategoryWinners.length === 0 ? (
-                <div className="text-center py-8">
-                  <Star className="w-10 h-10 text-amber-300/60 mx-auto mb-4" />
-                  <p className="text-amber-100/70">
-                    No winners yet. Press <span className="font-semibold text-amber-300">Draw</span> to begin.
-                  </p>
+        <div className="lineup-prizes">
+          {prizeCategories.map((prize, index) => {
+            const revealed = winners.filter(
+              (w) => w.category === prize.name,
+            ).length;
+            const complete = revealed >= prize.winnerCount;
+            return (
+              <div
+                key={prize.id}
+                className={`lineup-prize ${currentCategory?.id === prize.id ? "current" : ""} ${complete ? "complete" : ""}`}
+                aria-current={
+                  currentCategory?.id === prize.id ? "step" : undefined
+                }
+              >
+                <span>
+                  {complete ? <Check /> : String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <strong>{prize.name}</strong>
+                  <small>
+                    {revealed} / {prize.winnerCount} revealed
+                  </small>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {currentCategoryWinners
-                    .slice()
-                    .reverse()
-                    .map((winner, index) => (
-                      <div
-                        key={`${winner.couponId}-${winner.timestamp.getTime()}`}
-                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-300 ${
-                          index === 0 && currentWinner?.couponId === winner.couponId
-                            ? "border-amber-300 bg-amber-400/15 shadow-lg shadow-amber-500/20 animate-float-up"
-                            : "border-amber-400/15 bg-white/[0.03]"
-                        }`}
-                      >
-                        <div className="flex flex-col items-center">
-                          {index === 0 && currentWinner?.couponId === winner.couponId ? (
-                            <Trophy className="w-5 h-5 text-amber-300 animate-bounce" />
-                          ) : (
-                            <Trophy className="w-4 h-4 text-amber-400/70" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-white">
-                            {winner.dealerName}
-                            {winner.dealerId && ` - ${winner.dealerId}`}
-                            {winner.district && ` - ${winner.district}`}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            );
+          })}
+        </div>
+        <div
+          className="event-progress"
+          role="progressbar"
+          aria-label="Event progress"
+          aria-valuenow={progress.current}
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+        >
+          <span style={{ width: `${Math.min(100, progress.percentage)}%` }} />
         </div>
       </div>
-
-      {/* Reset Button */}
-      <div className="flex justify-center">
-        <Button
-          onClick={handleResetSystem}
-          variant="outline"
-          className="border-orange-500 text-white hover:bg-orange-500/20 bg-transparent"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Reset All Draws
-        </Button>
+      <div className="draw-bottom">
+        <span>
+          Results stay in this session. Export them before closing or
+          refreshing.
+        </span>
+        {resetControl}
       </div>
     </div>
-  )
+  );
+}
+
+function Confetti() {
+  return (
+    <div className="celebration-confetti" aria-hidden="true">
+      {Array.from({ length: 36 }, (_, i) => (
+        <i
+          key={i}
+          style={
+            {
+              left: `${(i * 37) % 100}%`,
+              "--drift": `${((i * 19) % 140) - 70}px`,
+              "--rotation": `${i * 47}deg`,
+              backgroundColor: ["#ead29c", "#fff4db", "#b49150", "#a9c8c0"][
+                i % 4
+              ],
+              animationDelay: `${(i % 7) * 0.09}s`,
+              animationDuration: `${2.4 + (i % 5) * 0.3}s`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
 }
