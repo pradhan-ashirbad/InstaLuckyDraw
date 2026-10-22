@@ -23,7 +23,7 @@ Stop the development server before building: both use `.next`. Build type checki
 
 1. Open **Data Upload**, download the spreadsheet template, and import Excel or CSV. Every row needs `Name` and `Coupon Number`. Optional fields are `Customer Id`, `District`, `Count of Total Coupons`, and `Row Number`.
 2. Check **Data View** and **Top Dealers**, then configure prizes, order, themes, and audio under **Manage Prizes**.
-3. Open **Live draw**. Each draw runs an 8.2-second award-show sequence: a sealed gold envelope, rotating participant names, a three-beat countdown, the envelope opening, and a full-stage winner reveal. The parent records the selected winner only after the presentation finishes. Move to the next category when all its winners have been revealed.
+3. Open **Live draw**. Each draw runs an 8.2-second award-show sequence: a sealed gold envelope, a three-beat countdown, the seal releasing, the flap opening, and the letter rising before a gentle fade into the winner reveal. Participant names stay hidden until the result. The parent records the selected winner only after the presentation finishes. Move to the next category when all its winners have been revealed.
 4. Open **Results** to export Excel, a detailed Excel report, or CSV. Reset requires confirmation.
 
 Participant and winner data live in memory for the current browser session. Export before refreshing or closing the page. Importing another file resets results and requires confirmation when winners exist. Only the selected background theme and custom color persist in local storage.

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { StageTheme } from "@/lib/background-themes";
 import {
-  SELECTION_START_MS,
+  REVEAL_TRANSITION_MS,
   ENVELOPE_OPEN_MS,
   ANTICIPATION_MS,
 } from "@/lib/draw-timing";
@@ -92,8 +92,6 @@ export function SequentialDrawInterface({
   stageTheme,
   audioSettings,
 }: SequentialDrawInterfaceProps) {
-  const [pool, setPool] = useState<string[]>([]);
-  const [candidateIndex, setCandidateIndex] = useState(0);
   const [phase, setPhase] = useState("preparing");
   const [countdown, setCountdown] = useState(3);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -130,42 +128,20 @@ export function SequentialDrawInterface({
   // the winner, using the same eligibility rules as before.
   useEffect(() => {
     if (!isDrawing || !currentCategory) return;
-    const names = getEligibleCoupons(currentCategory.id)
-      .map((c) => String(c.Name))
-      .filter(Boolean);
-    setPool(names.slice(0, 80));
-    setCandidateIndex(0);
     setPhase("preparing");
     setCountdown(3);
     const timers = [
-      setTimeout(() => setPhase("spinning"), SELECTION_START_MS),
       setTimeout(() => {
         setPhase("countdown");
         setCountdown(3);
       }, ANTICIPATION_MS),
       setTimeout(() => setCountdown(2), ANTICIPATION_MS + 1000),
       setTimeout(() => setCountdown(1), ANTICIPATION_MS + 2000),
-      setTimeout(() => setPhase("locked"), ENVELOPE_OPEN_MS),
+      setTimeout(() => setPhase("opening"), ENVELOPE_OPEN_MS),
+      setTimeout(() => setPhase("revealing"), REVEAL_TRANSITION_MS),
     ];
     return () => timers.forEach(clearTimeout);
-  }, [isDrawing, currentCategory, getEligibleCoupons]);
-
-  useEffect(() => {
-    if (!isDrawing || !pool.length || reducedMotion) return;
-    const started = performance.now();
-    let timer: ReturnType<typeof setTimeout>;
-    const cycle = () => {
-      const elapsed = performance.now() - started;
-      if (elapsed >= ANTICIPATION_MS) return;
-      setCandidateIndex((index) => (index + 1) % pool.length);
-      timer = setTimeout(
-        cycle,
-        90 + Math.pow(elapsed / ANTICIPATION_MS, 3) * 280,
-      );
-    };
-    timer = setTimeout(cycle, SELECTION_START_MS);
-    return () => clearTimeout(timer);
-  }, [isDrawing, pool, reducedMotion]);
+  }, [isDrawing, currentCategory]);
 
   useEffect(() => {
     if (!isDrawing || !soundEnabled) musicRef.current?.pause();
@@ -226,6 +202,9 @@ export function SequentialDrawInterface({
 
   const startDraw = () => {
     if (!canDraw) return;
+    // Start sealed on the first frame, including when drawing another winner.
+    setPhase("preparing");
+    setCountdown(3);
     setSoundMessage("");
     if (soundEnabled && audioSettings.volume > 0) {
       try {
@@ -395,23 +374,16 @@ export function SequentialDrawInterface({
                     aria-live="polite"
                   >
                     {phase === "preparing" ? (
-                      <p className="gala-draw-line">A little suspense…</p>
-                    ) : phase === "spinning" ? (
-                      <>
+                      <div className="gala-suspense-beat" key="sealed">
                         <p className="gala-draw-line">
-                          So many extraordinary partners.
+                          Your moment is waiting.
                         </p>
-                        <div
-                          className="gala-candidate"
-                          key={candidateIndex}
-                          aria-hidden="true"
-                        >
-                          {pool[candidateIndex] || "A lucky moment awaits"}
-                        </div>
-                        <span>One unforgettable moment.</span>
-                      </>
+                        <p className="gala-suspense-caption">
+                          One envelope. One extraordinary surprise.
+                        </p>
+                      </div>
                     ) : phase === "countdown" ? (
-                      <>
+                      <div className="gala-suspense-beat" key="countdown">
                         <span className="sr-only">
                           The winner will be revealed in {countdown}
                         </span>
@@ -425,9 +397,12 @@ export function SequentialDrawInterface({
                         <p className="gala-countdown-caption">
                           The moment is almost here.
                         </p>
-                      </>
+                      </div>
                     ) : (
-                      <p className="gala-draw-line gala-and-winner">
+                      <p
+                        key="opening"
+                        className="gala-draw-line gala-and-winner"
+                      >
                         And the winner is…
                       </p>
                     )}

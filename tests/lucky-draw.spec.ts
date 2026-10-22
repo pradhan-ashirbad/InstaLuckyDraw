@@ -285,14 +285,32 @@ test("complete live draw, envelope countdown and reveal, eligibility, exports an
       page.getByRole("button", { name: "Reset all draws", exact: true }),
     ).toBeDisabled();
     await expect(page.locator(".gala-envelope")).toBeVisible();
+    await expect(page.locator(".gala-drawing")).toContainText(
+      "Your moment is waiting.",
+    );
+    await expect(page.locator(".gala-candidate, .name-reel")).toHaveCount(0);
+    await expect(page.locator(".gala-drawing")).not.toContainText(expected[i]);
     for (const beat of ["3", "2", "1"]) {
       await expect(page.locator(".gala-countdown")).toHaveText(beat);
       await expect(page.locator(".winner-name")).toHaveCount(0);
       await expect(previousWinners).toHaveText(String(i));
     }
-    await expect(page.locator(".phase-locked .gala-and-winner")).toHaveText(
+    await expect(page.locator(".phase-opening .gala-and-winner")).toHaveText(
       "And the winner is…",
     );
+    // The letter rises clear of the pocket before the envelope fades away.
+    await expect
+      .poll(() =>
+        page.locator(".envelope-letter").evaluate((letter) => {
+          const back = letter.parentElement!.querySelector(".envelope-back")!;
+          return (
+            back.getBoundingClientRect().top -
+            letter.getBoundingClientRect().top
+          );
+        }),
+      )
+      .toBeGreaterThan(55);
+    await expect(page.locator(".phase-revealing")).toBeVisible();
     await expect(page.locator(".winner-name")).toHaveText(expected[i]);
     await expect(previousWinners).toHaveText(String(i + 1));
     await expect(page.locator(".winner-ticket")).toContainText(
@@ -387,7 +405,7 @@ test("bundled audio and mute control preserve the live draw timeline", async ({
   );
   await page.getByRole("button", { name: "Draw winner", exact: true }).click();
   expect((await trackResponse).status()).toBeLessThan(400);
-  await expect(page.locator(".phase-spinning")).toBeVisible();
+  await expect(page.locator(".is-drawing.phase-preparing")).toBeVisible();
   await page.getByRole("button", { name: "Sound on" }).click();
   await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
     "aria-pressed",
