@@ -188,7 +188,6 @@ export default function CorporateLuckyDrawSystem() {
     useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentWinner, setCurrentWinner] = useState<Winner | null>(null);
-  const [drawTargetName, setDrawTargetName] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [isEventComplete, setIsEventComplete] = useState(false);
 
@@ -309,7 +308,6 @@ export default function CorporateLuckyDrawSystem() {
       setCurrentCategoryIndex(0);
       setCurrentCategoryWinnerIndex(0);
       setCurrentWinner(null);
-      setDrawTargetName(null);
       setIsEventComplete(false);
       setCurrentPage(1);
       setSearchTerm("");
@@ -389,9 +387,8 @@ export default function CorporateLuckyDrawSystem() {
     if (currentCategoryWinnerIndex >= category.winnerCount) return;
     drawInFlight.current = true;
 
-    // Pick the winner up front so the reel can land precisely on them
+    // Select once; the presentation finishes before the result is committed.
     const selected = eligible[Math.floor(Math.random() * eligible.length)];
-    setDrawTargetName(selected.Name);
     setIsDrawing(true);
     await new Promise<void>((resolve) => {
       drawTimer.current = setTimeout(resolve, DRAW_DURATION_MS);
@@ -535,6 +532,7 @@ export default function CorporateLuckyDrawSystem() {
   return (
     <div
       className="event-app min-h-screen"
+      data-view={activeTab === "draw" ? "show" : "manage"}
       style={
         {
           "--event-accent": accentHex,
@@ -1090,7 +1088,8 @@ export default function CorporateLuckyDrawSystem() {
             </TabsContent>
 
             {/* --------------------- LUCKY DRAW --------------------- */}
-            <TabsContent value="draw" className="space-y-6">
+            <TabsContent value="draw">
+              <h1 className="sr-only">Sulphamax Smart Lucky Draw</h1>
               {dealerData.length === 0 ? (
                 <div className="welcome-stage">
                   <div className="welcome-stage-art" aria-hidden="true">
@@ -1144,7 +1143,6 @@ export default function CorporateLuckyDrawSystem() {
                   currentCategoryWinnerIndex={currentCategoryWinnerIndex}
                   isDrawing={isDrawing}
                   currentWinner={currentWinner}
-                  targetName={drawTargetName}
                   isEventComplete={isEventComplete}
                   progress={getProgress()}
                   onPerformDraw={performNextDraw}

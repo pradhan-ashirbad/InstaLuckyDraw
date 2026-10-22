@@ -650,7 +650,7 @@ export function PrizeManagement({
             <ul className="text-sm text-slate-300 space-y-1">
               <li>
                 • <strong>Drawing Music</strong> - Plays during the spinning
-                animation (5.2 seconds)
+                animation (8.2 seconds)
               </li>
               <li>
                 • <strong>Winner Music</strong> - Plays when a winner is

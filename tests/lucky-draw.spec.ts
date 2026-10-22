@@ -88,9 +88,9 @@ test.afterEach(async ({ page }) => {
 test("navigation, empty states, upload validation and template", async ({
   page,
 }) => {
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Extraordinary rewards",
-  );
+  await expect(
+    page.getByRole("heading", { name: /Someone’s lucky moment/ }),
+  ).toContainText("starts right here.");
   for (const name of [
     "Data Upload",
     "Data View",
@@ -232,7 +232,7 @@ test("prize CRUD, order, preset and custom theme persistence", async ({
   await assertNoOverflow(page);
 });
 
-test("complete live draw, correct reel landing, eligibility, exports and reset", async ({
+test("complete live draw, envelope countdown and reveal, eligibility, exports and reset", async ({
   page,
 }, testInfo) => {
   test.setTimeout(120000);
@@ -284,28 +284,15 @@ test("complete live draw, correct reel landing, eligibility, exports and reset",
     await expect(
       page.getByRole("button", { name: "Reset all draws", exact: true }),
     ).toBeDisabled();
-    // Observe the landing inside the page to avoid missing the brief locked beat
-    // while browser automation is taking snapshots over the protocol.
-    const landed = await page.locator(".name-reel").evaluate(
-      (reel) =>
-        new Promise<string | undefined>((resolve) => {
-          const sample = () => {
-            if (reel.closest(".phase-locked")) {
-              const center =
-                reel.getBoundingClientRect().top + reel.clientHeight / 2;
-              const row = [...reel.querySelectorAll(".reel-row")].find(
-                (row) => {
-                  const box = row.getBoundingClientRect();
-                  return box.top <= center && box.bottom > center;
-                },
-              );
-              resolve(row?.textContent || undefined);
-            } else requestAnimationFrame(sample);
-          };
-          sample();
-        }),
+    await expect(page.locator(".gala-envelope")).toBeVisible();
+    for (const beat of ["3", "2", "1"]) {
+      await expect(page.locator(".gala-countdown")).toHaveText(beat);
+      await expect(page.locator(".winner-name")).toHaveCount(0);
+      await expect(previousWinners).toHaveText(String(i));
+    }
+    await expect(page.locator(".phase-locked .gala-and-winner")).toHaveText(
+      "And the winner is…",
     );
-    expect(landed).toBe(expected[i]);
     await expect(page.locator(".winner-name")).toHaveText(expected[i]);
     await expect(previousWinners).toHaveText(String(i + 1));
     await expect(page.locator(".winner-ticket")).toContainText(
@@ -379,7 +366,7 @@ test("reduced motion, exhausted pool, and full-screen interaction", async ({
   await expect(
     page.getByText("Selecting your next winner…", { exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".name-reel")).toHaveCount(0);
+  await expect(page.locator(".gala-envelope")).toHaveCount(0);
   await expect(page.locator(".winner-name")).toHaveText("Partner 1");
   await expect(
     page.getByRole("button", { name: "Draw next winner", exact: true }),
